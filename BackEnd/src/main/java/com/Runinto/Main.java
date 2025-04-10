@@ -1,4 +1,4 @@
-package com.Runinto;
+package com.runinto;
 
 public class Main {
     public static void main(String[] args) {

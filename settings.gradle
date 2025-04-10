@@ -1,4 +1,4 @@
 rootProject.name = 'Runinto'
-include 'BackEnd'
-include 'Front'
+include 'backend'
+include 'frontend'
 
