@@ -17,8 +17,10 @@ public class UserController {
 
     @GetMapping("/profile/{user_id}")
     public ResponseEntity<ProfileResponse> GetProfile(@PathVariable("user_id") Long userId) {
-        //여기 고민
-        User user = userService.getUser(userId).orElseThrow();
+        User user = userService.getUser(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
         final ProfileResponse profileResponse = ProfileResponse.from(user);
         return ResponseEntity.ok().body(profileResponse);
     }
@@ -28,19 +30,20 @@ public class UserController {
             @PathVariable("user_id") Long userId,
             @RequestBody UpdateProfileRequest request
     ) {
-        // 1. 사용자 조회 -> 여기 고민
-        User user = userService.getUser(userId).orElseThrow();
+        User user = userService.getUser(userId).orElse(null);
 
-        // 2. 수정 가능한 필드만 업데이트
+        if(user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
         if (request.getName() != null) user.setName(request.getName());
         if (request.getAge() != null) user.setAge(request.getAge());
-        if (request.getSex() != null) user.setSex(request.getSex());
-        if (request.getIntro() != null) user.setIntro(request.getIntro());
+        if (request.getGender() != null) user.setSex(request.getGender());
+        if (request.getDescription() != null) user.setIntro(request.getDescription());
         if (request.getProfileImg() != null) user.setProfileImageUrl(request.getProfileImg());
 
         userService.saveUser(user);
 
-        // 3. 응답 객체 생성
         ProfileResponse response = ProfileResponse.from(user);
         return ResponseEntity.ok(response);
     }

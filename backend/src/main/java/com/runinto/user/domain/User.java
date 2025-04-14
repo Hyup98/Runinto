@@ -18,8 +18,8 @@ public class User {
 
 
     @Builder
-    public User(String name, String imgUrl, String description, Gender gender, int age) {
-        userId = 1L;
+    public User(Long userId, String name, String imgUrl, String description, Gender gender, int age) {
+        this.userId = userId;
         this.name = name;
         this.imgUrl = imgUrl;
         this.description = description;

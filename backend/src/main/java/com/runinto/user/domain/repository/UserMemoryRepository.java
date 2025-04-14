@@ -15,8 +15,7 @@ public class UserMemoryRepository {
 
     public Optional<User> findById(Long id) {
         log.info("Find User by id: {}", id);
-        //return Optional.ofNullable(users.get(id));
-        return Optional.of(new User("name", "IMGURL", "테스트 유저입니다", Gender.MALE, 1));
+        return Optional.ofNullable(users.get(id));
     };
 
     public void save(User user) {
