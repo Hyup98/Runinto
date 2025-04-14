@@ -3,33 +3,44 @@ package com.runinto.event.domain.repository;
 import com.runinto.chat.domain.Chatroom;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
+import com.runinto.event.domain.EventType;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Time;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 public class EventMemoryRepository {
-    private Map<Long, Event> events;
+
+    private Map<Long, Event> events = new HashMap<>();
+
+
+    //@PostConstruct
+    public void initDummyData() {
+        for (long i = 1; i <= 10; i++) {
+            Event event = Event.builder()
+                    .eventId(i)
+                    .title("이벤트 " + i)
+                    .description("설명입니다 " + i)
+                    .maxParticipants(10)
+                    .creationTime(Time.valueOf(LocalTime.now()))
+                    .latitude(37.56 + (i * 0.001)) // 위치를 약간씩 다르게
+                    .longitude(127.01 + (i * 0.001))
+                    .chatroomId(i)
+                    .participants((int) (i % 5))
+                    .categories(Set.of(new EventCategory(i,EventType.ACTIVITY, i)))
+                    .build();
+
+            save(event);
+        }
+
+        log.info("🟢 Dummy events initialized: {}개", events.size());
+    }
 
     public Optional<Event> findById(long id) {
-        //return Optional.ofNullable(events.get(id));
-        return Optional.of(
-                Event.builder()
-                        .name("타이틀")                        // 실제로는 title
-                        .description("이벤트 입니다!!.")
-                        .maxParticipants(5)
-                        .creationTime(Time.valueOf(LocalTime.now()))
-                        .latitude(37.5665)
-                        .longitude(126.9780)
-                        .chatroom(new Chatroom(1L))
-                        .participants(1)
-                        .build()
-        );
+        return Optional.ofNullable(events.get(id));
     }
 
     public void save(Event event) {
@@ -53,4 +64,11 @@ public class EventMemoryRepository {
                 .toList();
     }
 
+    public int getSize(){
+        return events.size();
+    }
+
+    public void delete(long id) {
+        events.remove(id);
+    }
 }

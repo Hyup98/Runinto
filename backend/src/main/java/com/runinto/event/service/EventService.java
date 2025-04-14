@@ -1,12 +1,10 @@
 package com.runinto.event.service;
 
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.repository.EventMemoryRepository;
 import com.runinto.event.dto.request.FindEventRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -32,5 +30,9 @@ public class EventService {
                 .filter(event -> event.isInArea(request.getNelatitude(), request.getNelongitude(), request.getSwlatitude(), request.getSwlongitude()))
                 .filter(event -> event.hasMatchingCategory(request.getCategories()))
                 .toList();
+    }
+
+    public void delete(long id) {
+        eventMemoryRepository.delete(id);
     }
 }

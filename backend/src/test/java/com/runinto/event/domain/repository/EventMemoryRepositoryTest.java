@@ -1,0 +1,116 @@
+package com.runinto.event.domain.repository;
+
+import com.runinto.chat.domain.Chatroom;
+import com.runinto.event.domain.Event;
+import com.runinto.event.domain.EventCategory;
+import com.runinto.event.domain.EventType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.sql.Time;
+import java.time.LocalTime;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
+class EventMemoryRepositoryTest {
+
+    EventMemoryRepository eventMemoryRepository = new EventMemoryRepository();
+
+    @BeforeEach
+    void setUp() {
+        eventMemoryRepository.initDummyData();
+    }
+
+    @AfterEach
+    void tearDown() {
+    }
+
+    @Test
+    void findById() {
+        //given & when
+        Event event = eventMemoryRepository.findById(1L).orElse(null);
+        Event event1 = eventMemoryRepository.findById(5L).orElse(null);
+        Event event2 = eventMemoryRepository.findById(15L).orElse(null);
+
+        //then
+        assertEquals(event.getEventId(),1L);
+        assertEquals(event1.getEventId(),5L);
+        assertNull(event2);
+    }
+
+    @Test
+    void save() {
+        //given
+        Event event = Event.builder()
+                .eventId(11L)
+                .title("이벤트 " + 11L)
+                .description("설명입니다 " + 11L)
+                .maxParticipants(10)
+                .creationTime(Time.valueOf(LocalTime.now()))
+                .latitude(37.56 + (11 * 0.001)) // 위치를 약간씩 다르게
+                .longitude(127.01 + (11 * 0.001))
+                .chatroomId(11L)
+                .participants((int) (11 % 5))
+                .categories(Set.of(new EventCategory(11,EventType.ACTIVITY, 1L)))
+                .build();
+
+        //when
+        eventMemoryRepository.save(event);
+
+        //then
+        assertThat(event).usingRecursiveComparison().isEqualTo(eventMemoryRepository.findById(11L).orElse(null));
+        assertEquals(11, eventMemoryRepository.getSize());
+    }
+
+    @Test
+    void findAll() {
+        //given
+        //when
+        List<Event> events = eventMemoryRepository.findAll();
+        //then
+        assertEquals(10, events.size());
+
+    }
+
+    @Test
+    void findByCategory() {
+        //given
+        List<EventCategory> categories = new LinkedList<>();
+        categories.add(new EventCategory(1L,EventType.ACTIVITY, 2L));
+        List<EventCategory> categories1 = new LinkedList<>();
+        categories1.add(new EventCategory(2L,EventType.EAT, 1L));
+
+        //when
+        List<Event> events = eventMemoryRepository.findByCategory(categories);
+        List<Event> events1 = eventMemoryRepository.findByCategory(categories1);
+
+        //then
+        assertEquals(10, events.size());
+        assertEquals(0, events1.size());
+    }
+
+    @Test
+    void findByArea() {
+
+        double swLat = 37.562;
+        double swLng = 127.012;
+        double neLat = 37.566;
+        double neLng = 127.016;
+
+        // when
+        List<Event> result = eventMemoryRepository.findByArea(neLat, neLng, swLat, swLng);
+
+        // then
+        assertEquals(5, result.size());
+
+        for (Event event : result) {
+            assertTrue(event.getLatitude() >= swLat && event.getLatitude() <= neLat);
+            assertTrue(event.getLongitude() >= swLng && event.getLongitude() <= neLng);
+        }
+    }
+}

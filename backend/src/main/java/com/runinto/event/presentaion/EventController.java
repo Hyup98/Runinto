@@ -7,14 +7,11 @@ import com.runinto.event.dto.request.UpdateEventRequest;
 import com.runinto.event.dto.response.EventListResponse;
 import com.runinto.event.dto.response.EventResponse;
 import com.runinto.event.service.EventService;
-import com.sun.jdi.request.EventRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -34,7 +31,10 @@ public class EventController {
     public ResponseEntity<EventResponse> UpdateEventV1(
             @PathVariable("event_id") Long eventId,
             @RequestBody UpdateEventRequest eventRequest) {
-        Event event = eventService.findById(eventId).orElseThrow();
+        Event event = eventService.findById(eventId).orElse(null);
+        if(event == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         if (eventRequest.getTitle() != null) event.setTitle(eventRequest.getTitle());
         if (eventRequest.getDescription() != null) event.setDescription(eventRequest.getDescription());
@@ -63,7 +63,16 @@ public class EventController {
     }
 
 
-    //이벤트 삭제 요청
+    /*이벤트 삭제 요청
+    추가예정 기능
+    1. 이벤트 관리자만 삭제 가능-> 권한
+    2. jwt확인 후 관리자인지 확인
+     */
+    @DeleteMapping("{event_id}")
+    public ResponseEntity<String> DeleteEventV1(@PathVariable("event_id") Long eventId) {
+        eventService.delete(eventId);
+        return ResponseEntity.ok("Event deleted.");
+    }
 
     //이벤트 참여 요청 -> 채팅 서버를 따로 빼서 관리
     @PostMapping("{event_id}/participants")

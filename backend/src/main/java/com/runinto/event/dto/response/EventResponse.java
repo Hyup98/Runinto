@@ -19,14 +19,14 @@ public class EventResponse {
     private Time creationTime;
     private double latitude;
     private double longitude;
-    private Chatroom chatroom;
+    private Long chatroomId;
     private boolean isPublic;
     private int participants;
 
-    public EventResponse(Long eventId, String description, Chatroom chatroom, String title, int participants, int maxParticipants, Time creationTime, double latitude, double longitude, boolean aPublic) {
+    public EventResponse(Long eventId, String description, Long chatroomId, String title, int participants, int maxParticipants, Time creationTime, double latitude, double longitude, boolean aPublic) {
         this.eventId = eventId;
         this.description = description;
-        this.chatroom = chatroom;
+        this.chatroomId = chatroomId;
         this.title = title;
         this.participants = participants;
         this.maxParticipants = maxParticipants;
@@ -37,7 +37,7 @@ public class EventResponse {
     }
 
     public static EventResponse from(final Event event) {
-        return new EventResponse(event.getEventId(), event.getDescription(),event.getChatroom(),
+        return new EventResponse(event.getEventId(), event.getDescription(),event.getChatroomId(),
                 event.getTitle(), event.getParticipants(), event.getMaxParticipants(), event.getCreationTime(),
                 event.getLatitude(), event.getLongitude(),event.isPublic());
     }
