@@ -1,9 +1,7 @@
 package com.runinto.user.service;
 
-import com.runinto.event.domain.Event;
 import com.runinto.user.domain.User;
-import com.runinto.user.dto.response.ProfileResponse;
-import com.runinto.user.domain.repository.UserMemoryRepository;
+import com.runinto.user.domain.repository.UserRepositoryImple;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +11,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserMemoryRepository userMemoryRepository;
+    private final UserRepositoryImple userMemoryRepository;
 
     public Optional<User> getUser(final Long userId) {
         return userMemoryRepository.findById(userId);

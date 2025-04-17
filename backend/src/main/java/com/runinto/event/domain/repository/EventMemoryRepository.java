@@ -1,18 +1,12 @@
 package com.runinto.event.domain.repository;
 
-import com.runinto.chat.domain.Chatroom;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
-import com.runinto.event.domain.EventType;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-
-import java.sql.Time;
-import java.time.LocalTime;
 import java.util.*;
 
 @Slf4j
-public class EventMemoryRepository {
+public class EventMemoryRepository implements EventRepositoryImple{
 
     private Map<Long, Event> events = new HashMap<>();
 

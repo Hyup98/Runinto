@@ -1,0 +1,27 @@
+package com.runinto.chat.domain.repository;
+
+import com.runinto.chat.domain.ChatMessage;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public class ChatMessageMemoryRepository {
+
+    ArrayList<ChatMessage> messages = new ArrayList<>();
+
+    public Optional<List<ChatMessage>> getMessages(Long chatRoomId) {
+        List<ChatMessage> ans = new ArrayList<>();
+        for (ChatMessage message : messages) {
+            if(message.getChatRoomId().equals(chatRoomId)) {
+                ans.add(message);
+            }
+        }
+        return Optional.of(ans);
+    }
+
+    public void save(ChatMessage message) {
+        messages.add(message);
+    }
+
+}

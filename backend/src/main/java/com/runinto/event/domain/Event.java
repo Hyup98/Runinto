@@ -58,11 +58,6 @@ public class Event {
     }
 
     public boolean hasMatchingCategory(List<EventCategory> categorys) {
-        /*Set<EventType> requestSet = new HashSet<>();
-        for (EventCategory category : categorys) {
-            requestSet.add(category.getCategory());
-        }*/
-
         Set<EventType> requestSet = categorys.stream()
                 .map(EventCategory::getCategory)
                 .collect(Collectors.toSet());

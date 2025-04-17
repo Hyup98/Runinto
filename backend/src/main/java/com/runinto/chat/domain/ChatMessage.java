@@ -1,14 +1,15 @@
 package com.runinto.chat.domain;
 
+import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.sql.Time;
 
 @Data
+@Builder
 public class ChatMessage {
-    private Long id;
-    private Chatroom chatroom;
-    private Long senderId;
+    private Long ChatRoomId;
+    private String senderId;
     private String message;
-    private LocalDateTime timestamp;
+    private Time sendTime;
 }

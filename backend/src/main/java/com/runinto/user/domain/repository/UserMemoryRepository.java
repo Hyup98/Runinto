@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-public class UserMemoryRepository {
+public class UserMemoryRepository implements UserRepositoryImple{
 
     private Map<Long, User> users = new HashMap<>();
 

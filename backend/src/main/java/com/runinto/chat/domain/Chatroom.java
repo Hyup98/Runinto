@@ -8,6 +8,9 @@ import java.util.List;
 @Data
 @RequiredArgsConstructor
 public class Chatroom {
+
+    public static Long ChatRoomCount = 0L;
+
     private Long id;
 
     //추후에 이 리스트가 다른 서버로 요청 보내고 받는 기능을 하는 그런 친구로 수정할 예정

@@ -92,7 +92,4 @@ public class EventController {
         return ResponseEntity.ok("이벤트에 성공적으로 참여했습니다.");
     }
 
-
-
-
 }
