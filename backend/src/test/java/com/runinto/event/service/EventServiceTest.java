@@ -15,6 +15,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+//테스트가 우선순위가 더 높게
+//테스트에서 원하는 부분이 뭔지 보고 다른 부분은 테스트에서 배제하는 것도 -> mockito -> 해당 결과를 미리 만들고 테스트 한다
+//모키토로 다시 서비스 테스트 만들기
+//테스트코드 보기
 class EventServiceTest {
     private EventService eventService;
     private EventMemoryRepository eventMemoryRepository;
@@ -26,7 +30,6 @@ class EventServiceTest {
         EventType[] eventTypes = EventType.values(); // [EAT, ACTIVITY, TALKING]
 
         for (long i = 1; i <= 10; i++) {
-            // 순환 방식으로 카테고리 고르게 분포시키기
             EventType type = eventTypes[(int)((i - 1) % eventTypes.length)];
 
             Set<EventCategory> categories = Set.of(new EventCategory(i, type, i));
@@ -43,7 +46,6 @@ class EventServiceTest {
                     .participants((int) (i % 5))
                     .categories(categories)
                     .build();
-
             eventMemoryRepository.save(event);
         }
 
@@ -57,7 +59,7 @@ class EventServiceTest {
         FindEventRequest request = new FindEventRequest(
                 37.567, 127.017,   // 북동 (NE)
                 37.563, 127.013,   // 남서 (SW)
-                List.of(new EventCategory(1L, EventType.ACTIVITY, 1L))
+                Set.of(EventType.ACTIVITY)
         );
 
         // when

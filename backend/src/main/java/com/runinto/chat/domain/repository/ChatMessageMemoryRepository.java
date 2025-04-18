@@ -1,11 +1,13 @@
 package com.runinto.chat.domain.repository;
 
 import com.runinto.chat.domain.ChatMessage;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public class ChatMessageMemoryRepository {
 
     ArrayList<ChatMessage> messages = new ArrayList<>();

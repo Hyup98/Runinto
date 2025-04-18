@@ -1,4 +1,4 @@
-package com.runinto.user.presentation;
+package com.runinto.user.presentaion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.runinto.user.domain.Gender;
@@ -20,6 +20,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
+//테스트 -> 뭘 테스트 하는거냐??
+// 그럼 거기에 맞는 테스트가 중요하다.
+//api 스펙에대한 통합 스펙 테스트 -> 실제 컴퓨터에서 url로 jason형식으로 보냈을때 어떻게 결과가 나오냐의 테스트
+//testRestTemplate -> 포트도 열어준다. : 포스트맨이랑 같은 테스트 공부해보자
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
