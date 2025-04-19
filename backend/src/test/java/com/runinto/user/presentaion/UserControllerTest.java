@@ -1,83 +1,207 @@
 package com.runinto.user.presentaion;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.User;
+import com.runinto.user.dto.request.UpdateProfileRequest;
 import com.runinto.user.dto.response.ProfileResponse;
-import com.runinto.user.presentaion.UserController;
+
 import com.runinto.user.service.UserService;
 import org.junit.jupiter.api.*;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.*;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.*;
-
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
-
-//테스트 -> 뭘 테스트 하는거냐??
-// 그럼 거기에 맞는 테스트가 중요하다.
-//api 스펙에대한 통합 스펙 테스트 -> 실제 컴퓨터에서 url로 jason형식으로 보냈을때 어떻게 결과가 나오냐의 테스트
-//testRestTemplate -> 포트도 열어준다. : 포스트맨이랑 같은 테스트 공부해보자
-@WebMvcTest(UserController.class)
+@ExtendWith(MockitoExtension.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    private TestRestTemplate restTemplate;
 
     @MockitoBean
     private UserService userService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @LocalServerPort
+    private int port;
 
-    private User testUser;
+    private String baseUrl;
 
     @BeforeEach
     void setUp() {
-        testUser = User.builder()
-                .description("Test User")
+        baseUrl = "http://localhost:" + port + "/users";
+    }
+
+    //region 유저 조회
+    @Test
+    @DisplayName("유저 조회")
+    void getProfile() {
+
+        //given
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+
+        //when
+        when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
+
+        String url = baseUrl + "/profile/1";
+
+        ResponseEntity<ProfileResponse> response =
+                restTemplate.getForEntity(url, ProfileResponse.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+
+        String name = response.getBody().getName();
+
+        assertThat(name).isEqualTo("김영희");
+        assertThat(response.getBody().getGender()).isEqualTo(Gender.MALE);
+        assertThat(response.getBody().getAge()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("유저 조회-> id가 없을때")
+    void getProfileNonId() {
+
+        //given
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+
+        //when
+        when(userService.getUser(any())).thenReturn(Optional.empty());
+
+        String url = baseUrl + "/profile/4";
+
+        ResponseEntity<ProfileResponse> response =
+                restTemplate.getForEntity(url, ProfileResponse.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        System.out.println("응답 본문: " + response.getBody());
+    }
+
+    @Test
+    @DisplayName("유저 조회 -> id가 유효하지 않을때(음수)")
+    void getProfileInvalidIdV1() {
+
+        //given
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+
+        //when
+        when(userService.getUser(any())).thenReturn(Optional.empty());
+
+        String url = baseUrl + "/profile/-1";
+
+        ResponseEntity<ProfileResponse> response =
+                restTemplate.getForEntity(url, ProfileResponse.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        System.out.println("응답 본문: " + response.getBody());
+    }
+
+    @Test
+    @DisplayName("유저 조회 -> id가 유효하지 않을때(문자)")
+    void getProfileInvalidIdV2() {
+
+        //given
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+
+        //when
+        when(userService.getUser(any())).thenReturn(Optional.empty());
+
+        String url = baseUrl + "/profile/asfmk1@!1";
+
+        ResponseEntity<ProfileResponse> response =
+                restTemplate.getForEntity(url, ProfileResponse.class);
+
+        //then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        System.out.println("응답 본문: " + response.getBody());
+    }
+    //endregion
+
+    //region 프로필 업데이터
+    @Test
+    @DisplayName("유저 프로필 업데이트")
+    void updateProfile() {
+
+        //given
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
+        UpdateProfileRequest request = UpdateProfileRequest.builder()
+                .age(13)
+                .profileImg("newIMGURL")
+                .description("newDescription")
                 .gender(Gender.MALE)
-                .age(25)
-                .imgUrl("https://image.url/profile.jpg")
-                .name("Test User")
-                .userId(1L)
+                .name("newName")
                 .build();
-    }
 
-    @AfterEach
-    void tearDown() {
-        Mockito.reset(userService);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<UpdateProfileRequest> entity = new HttpEntity<>(request, headers);
+        String url = baseUrl + "/profile/1";
+
+        //when
+        ResponseEntity<ProfileResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.PATCH,
+                entity,
+                ProfileResponse.class
+        );
+
+        // then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getName()).isEqualTo("newName");
+
+        System.out.println("응답 본문: " + response.getBody());
     }
 
     @Test
-    void getProfile() throws Exception {
-        // given
-        Mockito.when(userService.getUser(1L)).thenReturn(Optional.of(testUser));
+    @DisplayName("유저 프로필 업데이트 -> 나이가 음수면 처리 x + 안보내면 기존 내용 유지")
+    void updateProfileNonId() {
 
-        ProfileResponse expected = ProfileResponse.from(testUser);
+        //given
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
+        UpdateProfileRequest request = UpdateProfileRequest.builder()
+                .age(- 13)
+                .profileImg("newIMGURL")
+                .description("newDescription")
+                .gender(Gender.MALE)
+                .build();
 
-        // when & then
-        mockMvc.perform(get("/users/profile/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value(expected.getName()))
-                .andExpect(jsonPath("$.age").value(expected.getAge()))
-                .andExpect(jsonPath("$.gender").value(expected.getGender().toString()))
-                .andExpect(jsonPath("$.description").value(expected.getDescription()))
-                .andExpect(jsonPath("$.imgUrl").value(expected.getImgUrl()));
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<UpdateProfileRequest> entity = new HttpEntity<>(request, headers);
+        String url = baseUrl + "/profile/1";
+
+        //when
+        ResponseEntity<ProfileResponse> response = restTemplate.exchange(
+                url,
+                HttpMethod.PATCH,
+                entity,
+                ProfileResponse.class
+        );
+
+        // then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getName()).isEqualTo("김영희");
+        assertThat(response.getBody().getAge()).isEqualTo(20);
+
+        System.out.println("응답 본문: " + response.getBody());
     }
+    //endregion
 
-    @Test
-    void getProfile_notFound() throws Exception {
-        // given
-        Mockito.when(userService.getUser(anyLong())).thenReturn(Optional.empty());
-
-        // when & then
-        mockMvc.perform(get("/users/profile/999"))
-                .andExpect(status().isNotFound());
-    }
 }
