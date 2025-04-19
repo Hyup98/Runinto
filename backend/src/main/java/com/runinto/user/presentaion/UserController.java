@@ -5,6 +5,7 @@ import com.runinto.user.dto.request.UpdateProfileRequest;
 import com.runinto.user.dto.response.ProfileResponse;
 import com.runinto.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserController {
 
+    @Autowired
     private final UserService userService;
 
     @GetMapping("/profile/{user_id}")

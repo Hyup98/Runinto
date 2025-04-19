@@ -57,13 +57,10 @@ public class Event {
         return isPublic;
     }
 
-    public boolean hasMatchingCategory(List<EventCategory> categorys) {
-        Set<EventType> requestSet = categorys.stream()
-                .map(EventCategory::getCategory)
-                .collect(Collectors.toSet());
+    public boolean hasMatchingCategory(Set<EventType> categorys) {
         return eventCategories.stream()
                 .map(EventCategory::getCategory)
-                .anyMatch(requestSet::contains);
+                .anyMatch(categorys::contains);
     }
 
     public boolean isInArea(double nelat, double nelng, double swlat, double swlng) {

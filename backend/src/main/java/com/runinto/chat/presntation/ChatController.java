@@ -7,6 +7,7 @@ import com.runinto.chat.service.ChatService;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.message.Message;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,8 @@ import java.sql.Time;
 @RestController
 @RequestMapping("chat")
 public class ChatController {
+
+    @Autowired
     private final ChatService chatService;
 
     @PostMapping("/{chatroomId}/messages")

@@ -1,11 +1,9 @@
 package com.runinto.event.dto.request;
 
-import com.runinto.event.domain.EventCategory;
+import com.runinto.event.domain.EventType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -14,5 +12,5 @@ public class FindEventRequest {
     private double nelongitude;
     private double swlatitude;
     private double swlongitude;
-    List<EventCategory> categories;
+    Set<EventType> categories;
 }

@@ -84,8 +84,7 @@ class EventMemoryRepositoryTest {
 
     @Test
     void findAll() {
-        //given
-        //when
+        //given && when
         List<Event> events = eventMemoryRepository.findAll();
         //then
         assertEquals(10, events.size());
@@ -95,10 +94,8 @@ class EventMemoryRepositoryTest {
     @Test
     void findByCategory() {
         //given
-        List<EventCategory> categories = new LinkedList<>();
-        categories.add(new EventCategory(1L,EventType.ACTIVITY, 2L));
-        List<EventCategory> categories1 = new LinkedList<>();
-        categories1.add(new EventCategory(2L,EventType.EAT, 1L));
+        Set<EventType> categories = Set.of(EventType.ACTIVITY);
+        Set<EventType> categories1 = Set.of(EventType.EAT);
 
         //when
         List<Event> events = eventMemoryRepository.findByCategory(categories);

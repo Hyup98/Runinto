@@ -1,6 +1,8 @@
 package com.runinto.event.presentaion;
 
 import com.runinto.event.domain.Event;
+import com.runinto.event.domain.EventCategory;
+import com.runinto.event.domain.EventType;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.event.dto.request.JoinEventRequest;
 import com.runinto.event.dto.request.UpdateEventRequest;
@@ -8,16 +10,19 @@ import com.runinto.event.dto.response.EventListResponse;
 import com.runinto.event.dto.response.EventResponse;
 import com.runinto.event.service.EventService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("events")
 public class EventController {
+    @Autowired
     private final EventService eventService;
 
     @GetMapping("{event_id}")
@@ -54,12 +59,21 @@ public class EventController {
      */
     @GetMapping()
     public ResponseEntity<EventListResponse> GetAllEventsV1(
-            @RequestBody FindEventRequest findEventRequest
+            @RequestParam double swLat,
+            @RequestParam double neLat,
+            @RequestParam double swLng,
+            @RequestParam double neLng,
+            @RequestParam(required = false) Set<EventType> category,
+            @RequestParam(required = false) Boolean isPublic
             ) {
-        List<Event> events = eventService.findByDynamicCondition(findEventRequest);
-
-        EventListResponse result = new EventListResponse(events);
-        return ResponseEntity.ok(result);
+        //위도 경도 범위 체크
+        if (swLat < -90 || swLat > 90 || neLat < -90 || neLat > 90 || neLat < swLat ||
+                swLng < -180 || swLng > 180 || neLng < -180 || neLng > 180 || neLng < swLng) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 위도 또는 경도 범위입니다.");
+        }
+        FindEventRequest condition = new FindEventRequest(swLat, neLat, swLng, neLng, category);
+        List<Event> events = eventService.findByDynamicCondition(condition);
+        return ResponseEntity.ok(new EventListResponse(events));
     }
 
 
@@ -91,5 +105,4 @@ public class EventController {
         event.application(joinEventRequest.getUserId());
         return ResponseEntity.ok("이벤트에 성공적으로 참여했습니다.");
     }
-
 }

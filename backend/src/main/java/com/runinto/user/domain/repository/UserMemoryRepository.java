@@ -3,12 +3,14 @@ package com.runinto.user.domain.repository;
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
+@Repository
 public class UserMemoryRepository implements UserRepositoryImple{
 
     private Map<Long, User> users = new HashMap<>();

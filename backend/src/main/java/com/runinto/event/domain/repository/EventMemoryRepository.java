@@ -1,11 +1,14 @@
 package com.runinto.event.domain.repository;
 
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
+import com.runinto.event.domain.EventType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
 import java.util.*;
 
 @Slf4j
+@Repository
 public class EventMemoryRepository implements EventRepositoryImple{
 
     private Map<Long, Event> events = new HashMap<>();
@@ -23,7 +26,7 @@ public class EventMemoryRepository implements EventRepositoryImple{
         return new ArrayList<>(events.values());
     }
 
-    public List<Event> findByCategory(List<EventCategory> categories) {
+    public List<Event> findByCategory(Set<EventType> categories) {
         return events.values().stream()
                 .filter(event -> event.hasMatchingCategory(categories))
                 .toList();
