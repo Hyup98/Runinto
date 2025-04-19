@@ -66,6 +66,11 @@ public class EventController {
             @RequestParam(required = false) Set<EventType> category,
             @RequestParam(required = false) Boolean isPublic
             ) {
+        //위도 경도 범위 체크
+        if (swLat < -90 || swLat > 90 || neLat < -90 || neLat > 90 || neLat < swLat ||
+                swLng < -180 || swLng > 180 || neLng < -180 || neLng > 180 || neLng < swLng) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 위도 또는 경도 범위입니다.");
+        }
         FindEventRequest condition = new FindEventRequest(swLat, neLat, swLng, neLng, category);
         List<Event> events = eventService.findByDynamicCondition(condition);
         return ResponseEntity.ok(new EventListResponse(events));
