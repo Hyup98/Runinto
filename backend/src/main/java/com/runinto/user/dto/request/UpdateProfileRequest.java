@@ -1,11 +1,11 @@
 package com.runinto.user.dto.request;
 
 import com.runinto.user.domain.Gender;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
+@Builder
 @Data
-@AllArgsConstructor
 public class UpdateProfileRequest {
     private String name;
     private Integer age;

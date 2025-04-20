@@ -12,5 +12,6 @@ public interface EventRepositoryImple {
     public List<Event> findAll();
     public List<Event> findByCategory(Set<EventType> categorys);
     public List<Event> findByArea(double nelatitude, double nelongitude, double swlatitude, double swlongitude);
-    public void delete(long id);
+    public boolean delete(long id);
+    public void clear();
 }

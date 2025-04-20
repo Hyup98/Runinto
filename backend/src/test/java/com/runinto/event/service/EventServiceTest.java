@@ -5,73 +5,113 @@ import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;
 import com.runinto.event.domain.repository.EventMemoryRepository;
 import com.runinto.event.dto.request.FindEventRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import java.sql.Time;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
-//테스트가 우선순위가 더 높게
-//테스트에서 원하는 부분이 뭔지 보고 다른 부분은 테스트에서 배제하는 것도 -> mockito -> 해당 결과를 미리 만들고 테스트 한다
-//모키토로 다시 서비스 테스트 만들기
-//테스트코드 보기
+
+@Slf4j
+@ExtendWith(MockitoExtension.class)
 class EventServiceTest {
-    private EventService eventService;
+
+    @Mock
     private EventMemoryRepository eventMemoryRepository;
 
-    @BeforeEach
-    void setUp() {
-        eventMemoryRepository = new EventMemoryRepository();
+    @InjectMocks
+    private EventService eventService;
 
-        EventType[] eventTypes = EventType.values(); // [EAT, ACTIVITY, TALKING]
 
-        for (long i = 1; i <= 10; i++) {
-            EventType type = eventTypes[(int)((i - 1) % eventTypes.length)];
-
-            Set<EventCategory> categories = Set.of(new EventCategory(i, type, i));
-
-            Event event = Event.builder()
-                    .eventId(i)
-                    .title("이벤트 " + i + " - " + type.name())
-                    .description("설명입니다 " + i)
-                    .maxParticipants(10)
-                    .creationTime(Time.valueOf(LocalTime.now()))
-                    .latitude(37.56 + (i * 0.001)) // 위도 37.561 ~ 37.570
-                    .longitude(127.01 + (i * 0.001)) // 경도 127.011 ~ 127.020
-                    .chatroomId(i)
-                    .participants((int) (i % 5))
-                    .categories(categories)
-                    .build();
-            eventMemoryRepository.save(event);
-        }
-
-        eventService = new EventService(eventMemoryRepository);
+    private Event createMockEvent(Long id, EventType type, double lat, double lng) {
+        return Event.builder()
+                .eventId(id)
+                .title("이벤트 " + id + " - " + type.name())
+                .description("설명 " + id)
+                .latitude(lat)
+                .longitude(lng)
+                .categories(Set.of(new EventCategory(id, type, id)))
+                .build();
     }
 
-
     @Test
-    void findByDynamicCondition() {
+    @DisplayName("위치만 일치하고 카테고리는 불일치 → 결과 없음")
+    void locationMatchesButCategoryDoesNot() {
         // given
+        Event event = createMockEvent(1L, EventType.TALKING, 37.565, 127.015);
         FindEventRequest request = new FindEventRequest(
-                37.567, 127.017,   // 북동 (NE)
-                37.563, 127.013,   // 남서 (SW)
-                Set.of(EventType.ACTIVITY)
+                37.567, 127.017, 37.563, 127.013,
+                Set.of(EventType.EAT)
         );
+
+        lenient().when(eventMemoryRepository.findAll()).thenReturn(List.of(event));
+        lenient().when(eventMemoryRepository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+                .thenReturn(List.of(event));
+        lenient().when(eventMemoryRepository.findByCategory(anySet()))
+                .thenReturn(List.of());
 
         // when
         List<Event> result = eventService.findByDynamicCondition(request);
 
         // then
-        assertEquals(1, result.size()); // i = 5번 이벤트만 일치
+        assertThat(result.size()).isEqualTo(0);
+    }
 
-        Event event = result.get(0);
-        assertEquals("이벤트 5 - ACTIVITY", event.getTitle());
-        assertEquals(EventType.ACTIVITY, event.getEventCategories().iterator().next().getCategory());
-        assertTrue(event.getLatitude() >= 37.563 && event.getLatitude() <= 37.567);
-        assertTrue(event.getLongitude() >= 127.013 && event.getLongitude() <= 127.017);
+    @Test
+    @DisplayName("카테고리는 일치하지만 위치는 벗어남 → 결과 없음")
+    void categoryMatchesButLocationDoesNot() {
+        // given
+        Event event = createMockEvent(2L, EventType.ACTIVITY, 38.000, 128.000); // 범위 밖
+        FindEventRequest request = new FindEventRequest(
+                37.567, 127.017, 37.563, 127.013,
+                Set.of(EventType.ACTIVITY)
+        );
+
+        lenient().when(eventMemoryRepository.findAll()).thenReturn(List.of(event));
+        lenient().when(eventMemoryRepository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+                .thenReturn(List.of()); // 위치 불일치
+        lenient().when(eventMemoryRepository.findByCategory(anySet()))
+                .thenReturn(List.of(event)); // 카테고리는 일치
+
+        // when
+        List<Event> result = eventService.findByDynamicCondition(request);
+
+        // then
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("조건 모두 일치하는 복수 이벤트 반환")
+    void multipleEventsMatchingConditions() {
+        Event e1 = createMockEvent(1L, EventType.EAT, 37.565, 127.015);
+        Event e2 = createMockEvent(2L, EventType.EAT, 37.566, 127.016);
+        FindEventRequest request = new FindEventRequest(
+                37.567, 127.017, 37.563, 127.013,
+                Set.of(EventType.EAT)
+        );
+
+        lenient().when(eventMemoryRepository.findAll()).thenReturn(List.of(e1, e2));
+        lenient().when(eventMemoryRepository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+                .thenReturn(List.of(e1, e2));
+        lenient().when(eventMemoryRepository.findByCategory(anySet()))
+                .thenReturn(List.of(e1, e2));
+
+        List<Event> result = eventService.findByDynamicCondition(request);
+
+        assertEquals(2, result.size());
+        assertThat(result).extracting(Event::getEventId).containsExactlyInAnyOrder(1L, 2L);
     }
 }

@@ -1,5 +1,6 @@
 package com.runinto.event.presentaion;
 
+import com.runinto.config.ErrorResponse;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;
@@ -8,6 +9,8 @@ import com.runinto.event.dto.request.UpdateEventRequest;
 import com.runinto.event.dto.response.EventListResponse;
 import com.runinto.event.dto.response.EventResponse;
 import com.runinto.event.service.EventService;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,27 +21,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class EventControllerTest {
+class EventControllerIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @MockitoBean
+    @Autowired
     private EventService eventService;
 
     @LocalServerPort
@@ -49,6 +47,32 @@ class EventControllerTest {
     @BeforeEach
     void setUp() {
         baseUrl = "http://localhost:" + port + "/events";
+
+        if (eventService.findAll().isEmpty()) {
+            for (int i = 1; i <= 10; i++) {
+                EventType type = (i % 2 == 0) ? EventType.TALKING : EventType.ACTIVITY;
+                double lat = 37.50 + (i * 0.001);
+                double lng = 127.00 + (i * 0.001);
+
+                EventCategory category = new EventCategory((long) i, type, (long) i);
+                Event event = Event.builder()
+                        .eventId((long) i)
+                        .title("이벤트 " + i)
+                        .description("설명 " + i)
+                        .latitude(lat)
+                        .longitude(lng)
+                        .categories(Set.of(category))
+                        .maxParticipants(5)
+                        .build();
+
+                eventService.save(event);
+            }
+        }
+    }
+
+    @AfterEach
+    void tearDown() {
+        eventService.clear(); // clear 메소드 구현 필요
     }
 
     //region 이벤트 목록 조회
@@ -77,9 +101,6 @@ class EventControllerTest {
                 filteredEvents.add(event);
             }
         }
-
-        // mock 서비스가 필터링된 이벤트만 반환하도록 설정
-        when(eventService.findByDynamicCondition(any())).thenReturn(filteredEvents);
 
         String url = baseUrl +
                 "?swLat=37.50&neLat=37.60" +
@@ -114,31 +135,7 @@ class EventControllerTest {
     @Test
     @DisplayName("이벤트 목록 조회 필수 파라미터가 더 많다-> swLat 추가")
     void testMissingRequiredParamsV1() {
-        // given: 테스트용 이벤트 생성
-        List<Event> filteredEvents = new ArrayList<>();
-
-        for (int i = 1; i <= 10; i++) {
-            EventType type = (i % 2 == 0) ? EventType.TALKING : EventType.ACTIVITY;
-            double lat = 37.50 + (i * 0.001);  // 37.501 ~ 37.510
-            double lng = 127.00 + (i * 0.001); // 127.001 ~ 127.010
-
-            EventCategory category = new EventCategory((long) i, type, (long) i);
-            Event event = Event.builder()
-                    .eventId((long) i)
-                    .title("이벤트 " + i)
-                    .description("설명 " + i)
-                    .latitude(lat)
-                    .longitude(lng)
-                    .categories(Set.of(category))
-                    .build();
-
-            if (type == EventType.ACTIVITY && lat <= 37.60 && lng <= 127.10) {
-                filteredEvents.add(event);
-            }
-        }
-
-        // mock 서비스가 필터링된 이벤트만 반환하도록 설정
-        when(eventService.findByDynamicCondition(any())).thenReturn(filteredEvents);
+        // given & when
 
         String url = baseUrl +
                 "?swLat=37.50&neLat=37.60&?Lat=37.510" +
@@ -146,7 +143,6 @@ class EventControllerTest {
                 "&category=ACTIVITY" +
                 "&isPublic=true";
 
-        // when
         ResponseEntity<EventListResponse> response =
                 restTemplate.getForEntity(url, EventListResponse.class);
 
@@ -158,8 +154,7 @@ class EventControllerTest {
     @Test
     @DisplayName("이벤트 목록 조회 필수 파라미터 누락-> swLat, neLng누락")
     void testMissingRequiredParamsV2() {
-        //given
-        // 필수 파라미터 누락: swLat, neLng
+        //given & when
         String url = baseUrl + "?neLat=37.60&swLng=127.00";  // swLat, neLng 빠짐
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
@@ -173,41 +168,16 @@ class EventControllerTest {
     @Test
     @DisplayName("이벤트 목록 조회 파라미터 잘못된 타입-> EventType")
     void testMissingRequiredParamsV3() {
-// given: 테스트용 이벤트 생성
-        List<Event> filteredEvents = new ArrayList<>();
-
-        for (int i = 1; i <= 10; i++) {
-            EventType type = (i % 2 == 0) ? EventType.TALKING : EventType.ACTIVITY;
-            double lat = 37.50 + (i * 0.001);  // 37.501 ~ 37.510
-            double lng = 127.00 + (i * 0.001); // 127.001 ~ 127.010
-
-            EventCategory category = new EventCategory((long) i, type, (long) i);
-            Event event = Event.builder()
-                    .eventId((long) i)
-                    .title("이벤트 " + i)
-                    .description("설명 " + i)
-                    .latitude(lat)
-                    .longitude(lng)
-                    .categories(Set.of(category))
-                    .build();
-
-            if (type == EventType.ACTIVITY && lat <= 37.60 && lng <= 127.10) {
-                filteredEvents.add(event);
-            }
-        }
-
-        // mock 서비스가 필터링된 이벤트만 반환하도록 설정
-        when(eventService.findByDynamicCondition(any())).thenReturn(filteredEvents);
+        // given & when
 
         String url = baseUrl +
                 "?swLat=37.50&neLat=37.60" +
                 "&swLng=127.00&neLng=127.10" +
                 "&category=GAME" +
                 "&isPublic=true";
-
-        // when
         ResponseEntity<EventListResponse> response =
                 restTemplate.getForEntity(url, EventListResponse.class);
+
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         System.out.println("응답 본문: " + response.getBody());
@@ -216,31 +186,7 @@ class EventControllerTest {
     @Test
     @DisplayName("이벤트 목록 조회 파라미터 잘못된 타입-> 위도 경도가 숫자x")
     void testMissingRequiredParamsV4() {
-        // given: 테스트용 이벤트 생성
-        List<Event> filteredEvents = new ArrayList<>();
-
-        for (int i = 1; i <= 10; i++) {
-            EventType type = (i % 2 == 0) ? EventType.TALKING : EventType.ACTIVITY;
-            double lat = 37.50 + (i * 0.001);  // 37.501 ~ 37.510
-            double lng = 127.00 + (i * 0.001); // 127.001 ~ 127.010
-
-            EventCategory category = new EventCategory((long) i, type, (long) i);
-            Event event = Event.builder()
-                    .eventId((long) i)
-                    .title("이벤트 " + i)
-                    .description("설명 " + i)
-                    .latitude(lat)
-                    .longitude(lng)
-                    .categories(Set.of(category))
-                    .build();
-
-            if (type == EventType.ACTIVITY && lat <= 37.60 && lng <= 127.10) {
-                filteredEvents.add(event);
-            }
-        }
-
-        // mock 서비스가 필터링된 이벤트만 반환하도록 설정
-        when(eventService.findByDynamicCondition(any())).thenReturn(filteredEvents);
+        // given & when
 
         String url = baseUrl +
                 "?swLat=asfa40&neLat=37.60" +
@@ -248,7 +194,6 @@ class EventControllerTest {
                 "&category=ACTIVITY" +
                 "&isPublic=true";
 
-        // when
         ResponseEntity<EventListResponse> response =
                 restTemplate.getForEntity(url, EventListResponse.class);
 
@@ -258,42 +203,19 @@ class EventControllerTest {
 
     }
 
-    //lat ->  -90 ~ 90
-    //lng -> -180 ~ 180
+    //todo -> 에러 메시지 코드를 추가할까? ... 흠
     @Test
     @DisplayName("이벤트 목록 조회 파라미터 범위 에러-> EventType")
     void testMissingRequiredParamsV5() {
-// given: 테스트용 이벤트 생성
-        List<Event> filteredEvents = new ArrayList<>();
-
-        for (int i = 1; i <= 10; i++) {
-            EventType type = (i % 2 == 0) ? EventType.TALKING : EventType.ACTIVITY;
-            double lat = 37.50 + (i * 0.001);  // 37.501 ~ 37.510
-            double lng = 127.00 + (i * 0.001); // 127.001 ~ 127.010
-
-            EventCategory category = new EventCategory((long) i, type, (long) i);
-            Event event = Event.builder()
-                    .eventId((long) i)
-                    .title("이벤트 " + i)
-                    .description("설명 " + i)
-                    .latitude(lat)
-                    .longitude(lng)
-                    .categories(Set.of(category))
-                    .build();
-        }
-
-        // mock 서비스가 필터링된 이벤트만 반환하도록 설정
-        when(eventService.findByDynamicCondition(any())).thenReturn(filteredEvents);
-
+        // given & when
         String url = baseUrl +
                 "?swLat=1837.50&neLat=37.60" +
                 "&swLng=127.00&neLng=1027.10" +
                 "&category=ACTIVITY" +
                 "&isPublic=true";
 
-        // when
-        ResponseEntity<EventListResponse> response =
-                restTemplate.getForEntity(url, EventListResponse.class);
+        ResponseEntity<ErrorResponse> response =
+                restTemplate.getForEntity(url, ErrorResponse.class);
 
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -309,11 +231,6 @@ class EventControllerTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<UpdateEventRequest> entity = new HttpEntity<>(request, headers);
-
-        Event updatedEvent = Event.builder().eventId(1L).title("새 타이틀").build();
-        when(eventService.findById(1L)).thenReturn(Optional.of(updatedEvent));
-        doNothing().when(eventService).save(any());
-
         ResponseEntity<EventResponse> response = restTemplate.exchange(baseUrl + "/1", HttpMethod.PATCH, entity, EventResponse.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getTitle()).isEqualTo("새 타이틀");
@@ -324,17 +241,25 @@ class EventControllerTest {
     @Test
     @DisplayName("이벤트 참여 요청 테스트.")
     void testAddParticipant() {
-        JoinEventRequest request = new JoinEventRequest(101L);
+        JoinEventRequest request = new JoinEventRequest(1L);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<JoinEventRequest> entity = new HttpEntity<>(request, headers);
-
-        Event event = Event.builder().eventId(1L).maxParticipants(10).participants(5).build();
-        when(eventService.findById(1L)).thenReturn(Optional.of(event));
-
         ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/1/participants", entity, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("성공적으로 참여");
+    }
+
+    @Test
+    @DisplayName("이벤트 참여 요청 테스트. -> 존재하지 않는 이벤트 참여")
+    void testAddParticipantinNon() {
+        JoinEventRequest request = new JoinEventRequest(1L);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<JoinEventRequest> entity = new HttpEntity<>(request, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(baseUrl + "/11/participants", entity, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        System.out.println("응답 본문: " + response.getBody());
     }
 
     //endregion
@@ -343,11 +268,24 @@ class EventControllerTest {
     @Test
     @DisplayName("이벤트 삭제 테스트.")
     void testDeleteEvent() {
-        doNothing().when(eventService).delete(1L);
-
         ResponseEntity<String> response = restTemplate.exchange(baseUrl + "/1", HttpMethod.DELETE, null, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).contains("deleted");
+        assertThat(eventService.findAll().size()).isEqualTo(9);
+        for(Event event : eventService.findAll()) {
+            log.info(event.toString());
+        }
+    }
+
+    @Test
+    @DisplayName("이벤트 삭제 테스트0. -> 존재 하지 않는 이벤트 삭제 요청")
+    void testDeleteNonEvent() {
+        ResponseEntity<String> response = restTemplate.exchange(baseUrl + "/0", HttpMethod.DELETE, null, String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(eventService.findAll().size()).isEqualTo(10);
+        for(Event event : eventService.findAll()) {
+            log.info(event.toString());
+        }
     }
     //endregion
 }

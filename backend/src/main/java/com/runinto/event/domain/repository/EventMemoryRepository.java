@@ -42,7 +42,9 @@ public class EventMemoryRepository implements EventRepositoryImple{
         return events.size();
     }
 
-    public void delete(long id) {
-        events.remove(id);
+    public boolean delete(long id) {
+        return events.remove(id)!= null;
     }
+
+    public void clear() {events.clear();}
 }
