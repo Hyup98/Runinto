@@ -13,10 +13,13 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EventService {
-    @Autowired
+
     private final EventRepositoryImple eventMemoryRepository;
+
+    public EventService(final EventRepositoryImple eventMemoryRepository) {
+        this.eventMemoryRepository = eventMemoryRepository;
+    }
 
     public Optional<Event> findById(long id) {
         return eventMemoryRepository.findById(id);
