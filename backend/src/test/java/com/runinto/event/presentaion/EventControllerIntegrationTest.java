@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-
+//https://meetup.nhncloud.com/posts/223
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

@@ -19,19 +19,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Slf4j
 @Validated
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("events")
 public class EventController {
-    @Autowired
+
     private final EventService eventService;
+
+    public EventController(final EventService eventService) {
+        this.eventService = eventService;
+    }
 
     @GetMapping("{event_id}")
     public ResponseEntity<EventResponse> GetEventV1(@PathVariable("event_id") Long eventId) {
@@ -88,7 +89,7 @@ public class EventController {
 
         List<Event> events = eventService.findByDynamicCondition(condition);
         for (Event event : events) {
-            log.info(event.toString());
+            log.info("\n " + event.toString());
         }
         return ResponseEntity.ok(new EventListResponse(events));
     }

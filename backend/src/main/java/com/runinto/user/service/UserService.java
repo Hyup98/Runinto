@@ -9,11 +9,13 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
     private final UserRepositoryImple userMemoryRepository;
+
+    public UserService(final UserRepositoryImple userMemoryRepository) {
+        this.userMemoryRepository = userMemoryRepository;
+    }
 
     public Optional<User> getUser(final Long userId) {
         return userMemoryRepository.findById(userId);
