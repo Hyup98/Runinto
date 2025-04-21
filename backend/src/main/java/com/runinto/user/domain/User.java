@@ -1,13 +1,9 @@
 package com.runinto.user.domain;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import lombok.*;
 
-@EntityScan
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 public class User {
     private Long userId;
     private String name;
@@ -16,16 +12,9 @@ public class User {
     private Gender gender;
     private Integer age;
 
-
-    @Builder
-    public User(Long userId, String name, String imgUrl, String description, Gender gender, int age) {
-        this.userId = userId;
-        this.name = name;
-        this.imgUrl = imgUrl;
-        this.description = description;
-        this.gender = gender;
-        this.age = age;
-    }
+    private String role;
+    private String password;
+    private String email;
 
     public void setSex(Gender sex) {
         gender = sex;

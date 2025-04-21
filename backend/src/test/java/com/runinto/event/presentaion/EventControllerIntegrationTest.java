@@ -1,6 +1,6 @@
 package com.runinto.event.presentaion;
 
-import com.runinto.config.ErrorResponse;
+import com.runinto.util.ErrorResponse;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;

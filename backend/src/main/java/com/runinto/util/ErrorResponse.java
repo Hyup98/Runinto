@@ -1,4 +1,4 @@
-package com.runinto.config;
+package com.runinto.util;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
