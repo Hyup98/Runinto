@@ -26,4 +26,16 @@ public class ChatMessageMemoryRepository {
         messages.add(message);
     }
 
+    public Optional<List<ChatMessage>> getAllMessages() {
+        List<ChatMessage> ans = new ArrayList<>();
+        for (ChatMessage message : messages) {
+            ans.add(message);
+        }
+        return Optional.of(ans);
+    }
+
+    public void clear() {
+        messages.clear();
+    }
+
 }

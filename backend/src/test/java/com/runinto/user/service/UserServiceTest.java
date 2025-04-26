@@ -29,7 +29,7 @@ class UserServiceTest {
     @DisplayName("getUser")
     void getUser() {
         // given
-        User dummyUser = new User(3L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(3L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
         when(userRepository.findById(1L)).thenReturn(Optional.of(dummyUser));
 
         // when
@@ -46,7 +46,7 @@ class UserServiceTest {
     @DisplayName("getUser -> 아이디 없음")
     void GetNonUser() {
         // given
-        User dummyUser = new User(3L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(3L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         // when
@@ -62,7 +62,7 @@ class UserServiceTest {
     @DisplayName("saveUser -> 새로운 유저")
     void saveUser() {
         // given
-        User user = new User(2L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User user = new User(2L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
 
         // when
         userService.saveUser(user);
@@ -75,7 +75,7 @@ class UserServiceTest {
     @DisplayName("saveUser -> 기존 유저")
     void saveUseExist() {
         // given
-        User user = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User user = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
 
         // when
         userService.saveUser(user);

@@ -2,6 +2,7 @@ package com.runinto.event.dto.response;
 
 import com.runinto.chat.domain.Chatroom;
 import com.runinto.event.domain.Event;
+import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +10,7 @@ import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
+@Data
 @RequiredArgsConstructor
 public class EventResponse {
     private Long eventId;

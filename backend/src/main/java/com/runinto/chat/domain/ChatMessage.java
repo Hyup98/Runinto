@@ -8,8 +8,8 @@ import java.sql.Time;
 @Data
 @Builder
 public class ChatMessage {
-    private Long ChatRoomId;
-    private String senderId;
+    private Long chatRoomId;
+    private Long senderId;
     private String message;
     private Time sendTime;
 }

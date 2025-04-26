@@ -1,12 +1,13 @@
-package com.runinto.chat.dto.response;
+package com.runinto.chat.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 public class ChatMessageRequest {
-    private String senderId;
+    private Long senderId;
     private String message;
-    private String ChatRoomId;
+    private String chatRoomId;
 }
