@@ -2,17 +2,15 @@ package com.runinto.user.presentaion;
 
 
 import com.runinto.user.domain.Gender;
+import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.dto.request.UpdateProfileRequest;
 import com.runinto.user.dto.response.ProfileResponse;
 
 import com.runinto.user.service.UserService;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
@@ -24,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(UserController.class)
-class UserControllerTest {
+class UserControllerUnitTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -48,7 +46,7 @@ class UserControllerTest {
     void getProfile() {
 
         //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email" );
 
         //when
         when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
@@ -74,7 +72,7 @@ class UserControllerTest {
     void getProfileNonId() {
 
         //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
 
         //when
         when(userService.getUser(any())).thenReturn(Optional.empty());
@@ -94,7 +92,7 @@ class UserControllerTest {
     void getProfileInvalidIdV1() {
 
         //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
 
         //when
         when(userService.getUser(any())).thenReturn(Optional.empty());
@@ -114,7 +112,7 @@ class UserControllerTest {
     void getProfileInvalidIdV2() {
 
         //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
 
         //when
         when(userService.getUser(any())).thenReturn(Optional.empty());
@@ -136,7 +134,7 @@ class UserControllerTest {
     void updateProfile() {
 
         //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
         when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
         UpdateProfileRequest request = UpdateProfileRequest.builder()
                 .age(13)
@@ -172,7 +170,7 @@ class UserControllerTest {
     void updateProfileNonId() {
 
         //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20);
+        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
         when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
         UpdateProfileRequest request = UpdateProfileRequest.builder()
                 .age(- 13)

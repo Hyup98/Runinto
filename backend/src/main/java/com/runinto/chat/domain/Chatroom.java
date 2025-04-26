@@ -3,13 +3,13 @@ package com.runinto.chat.domain;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@RequiredArgsConstructor
 public class Chatroom {
 
-    public static Long ChatRoomCount = 0L;
+    public static Long chatRoomCount = 0L;
 
     private Long id;
 
@@ -17,14 +17,20 @@ public class Chatroom {
     private List<Long> applicants;
 
     public void addApplicant(Long userId) {
+        if (applicants == null) {
+            applicants = new ArrayList<>();
+        }
         applicants.add(userId);
     }
 
-    public void removeApplicant(String userId) {
-        applicants.remove(userId);
+    public void removeApplicant(Long userId) {
+        if (applicants != null) {
+            applicants.remove(userId);
+        }
     }
 
     public Chatroom(Long id) {
         this.id = id;
+        this.applicants = new ArrayList<>();
     }
 }
