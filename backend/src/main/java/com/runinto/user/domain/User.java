@@ -1,30 +1,39 @@
 package com.runinto.user.domain;
 
+import com.runinto.event.domain.Event;
+import jakarta.persistence.*;
 import lombok.*;
 
-@Data
-@AllArgsConstructor
-public class User {
-    private Long userId;
-    private String name;
-    private String imgUrl;
-    private String description;
-    private Gender gender;
-    private Integer age;
+import java.util.HashSet;
+import java.util.Set;
 
-    private String role;
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Data
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(nullable = false, unique = true)
+    private String username;
+
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
     private String email;
 
-    public void setSex(Gender sex) {
-        gender = sex;
-    }
+    @ManyToMany(mappedBy = "participants")
+    private Set<Event> participatingEvents = new HashSet<>();
 
-    public void setIntro(String newDescription) {
-        description = newDescription;
-    }
-
-    public void setProfileImageUrl(String profileImg) {
-        imgUrl = profileImg;
+    @Builder
+    public User(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
     }
 }

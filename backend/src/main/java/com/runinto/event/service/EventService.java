@@ -15,26 +15,26 @@ import java.util.Optional;
 @Service
 public class EventService {
 
-    private final EventRepositoryImple eventMemoryRepository;
+    private final EventRepositoryImple eventRepository;
 
-    public EventService(final EventRepositoryImple eventMemoryRepository) {
-        this.eventMemoryRepository = eventMemoryRepository;
+    public EventService(final EventRepositoryImple eventRepository) {
+        this.eventRepository = eventRepository;
     }
 
     public Optional<Event> findById(long id) {
-        return eventMemoryRepository.findById(id);
+        return eventRepository.findById(id);
     }
 
     public List<Event> findAll() {
-        return eventMemoryRepository.findAll();
+        return eventRepository.findAll();
     }
 
     public void save(Event event) {
-        eventMemoryRepository.save(event);
+        eventRepository.save(event);
     }
 
     public List<Event> findByDynamicCondition(FindEventRequest request) {
-        return eventMemoryRepository.findAll().stream()
+        return eventRepository.findAll().stream()
                 .filter(event -> {
                     if (request.getSwlatitude() != null && request.getSwlongitude() != null &&
                             request.getNelatitude() != null && request.getNelongitude() != null) {
@@ -57,8 +57,8 @@ public class EventService {
     }
 
     public boolean delete(long id) {
-        return eventMemoryRepository.delete(id);
+        return eventRepository.delete(id);
     }
 
-    public void clear() {eventMemoryRepository.clear();}
+    public void clear() {eventRepository.clear();}
 }
