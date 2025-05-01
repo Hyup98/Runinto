@@ -2,6 +2,7 @@ package com.runinto.event.service;
 
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventType;
+import com.runinto.event.domain.repository.EventH2Repository;
 import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.event.dto.request.FindEventRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class EventService {
 
     private final EventRepositoryImple eventRepository;
 
-    public EventService(final EventRepositoryImple eventRepository) {
+    public EventService(final EventH2Repository eventRepository) {
         this.eventRepository = eventRepository;
     }
 

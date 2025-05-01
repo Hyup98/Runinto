@@ -1,26 +1,25 @@
 package com.runinto.event.domain;
 
-import jakarta.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
-@Embeddable
+@Entity
+@Table(name = "event_category")
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class EventCategory {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private EventType category;
 
-    private Long eventId;
-
-    @Builder
-    public EventCategory(long i, EventType eventType, Long event) {
-        this.id = i;
-        this.category = eventType;
-        this.eventId = event;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private Event event;
 }
+

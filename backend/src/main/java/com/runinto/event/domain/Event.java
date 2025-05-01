@@ -1,19 +1,19 @@
 package com.runinto.event.domain;
 
+import com.runinto.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Time;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /*todo
 맴버 변수에 연령대 추가 -> 새로운 enum으로 10대 20대등
  */
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
 @Entity
 @Table(name = "event")
@@ -50,11 +50,11 @@ public class Event {
 
     private int participants;
 
-    @ElementCollection
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventCategory> eventCategories = new HashSet<>();
 
-    @ElementCollection
-    private List<Long> applicants = new ArrayList<>();
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @Builder
     public Event(String title, Long eventId, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Long chatroomId, int participants, Set<EventCategory> categories) {
@@ -70,8 +70,16 @@ public class Event {
         this.participants = participants;
     }
 
-    public void application(Long userId) {
-        applicants.add(userId);
+    public void application(User user) {
+        EventParticipant participant = EventParticipant.builder()
+                .event(this)
+                .user(user)
+                .appliedAt(LocalDateTime.now())
+                .status(ParticipationStatus.REQUESTED)
+                .build();
+
+        this.eventParticipants.add(participant);
+        user.getEventParticipants().add(participant);
     }
 
     public boolean hasMatchingCategory(Set<EventType> categorys) {

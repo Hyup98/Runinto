@@ -34,7 +34,13 @@ public class CustomUserDetailsService implements UserDetailsService {
             BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
             String rawPassword = "1234";
             String encodedPassword = encoder.encode(rawPassword);
-            userData = new User(1L, "test", "IMGURL", "여자", Gender.MALE, 20,"admin",encodedPassword, "test");
+            userData = User.builder()
+                    .name("테스트유저")
+                    .imgUrl("https://example.com/profile.jpg")
+                    .description("임시 계정입니다.")
+                    .gender(Gender.MALE)
+                    .age(25)
+                    .build();
         }
         else {
             userData = null;

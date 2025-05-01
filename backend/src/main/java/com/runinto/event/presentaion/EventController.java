@@ -41,6 +41,34 @@ public class EventController {
         return ResponseEntity.ok(eventResponse);
     }
 
+    @PostMapping
+    public ResponseEntity<String> CreateEventV1(@RequestBody Event event) {
+        eventService.save(event);
+        return ResponseEntity.ok("create");
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<EventResponse> getTempEvent() {
+
+        Event testEvent = Event.builder()
+                .title("테스트 이벤트")
+                .description("이벤트 설명입니다.")
+                .maxParticipants(10)
+                .latitude(37.5665)
+                .longitude(126.9780)
+                .chatroomId(1L)
+                .participants(0)
+                .build();
+
+        EventCategory category = EventCategory.builder()
+                .category(EventType.MOVIE)
+                .build();
+
+        testEvent.setEventCategories(Set.of(category));
+        eventService.save(testEvent);
+        return ResponseEntity.ok(EventResponse.from(testEvent));
+    }
+
     @PatchMapping("{event_id}")
     public ResponseEntity<EventResponse> UpdateEventV1(
             @PathVariable("event_id") Long eventId,

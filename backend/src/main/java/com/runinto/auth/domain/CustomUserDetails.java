@@ -28,7 +28,7 @@ public class CustomUserDetails  implements UserDetails {
             @Override
             public String getAuthority() {
 
-                return userEntity.getRole();
+                return userEntity.getRole().toString(); // 여기 다시 생각해봐 enum으로 받으니까
             }
         });
 

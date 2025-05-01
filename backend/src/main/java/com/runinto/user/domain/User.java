@@ -1,16 +1,17 @@
 package com.runinto.user.domain;
 
 import com.runinto.event.domain.Event;
+import com.runinto.event.domain.EventParticipant;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Data
 @Entity
 @Table(name = "users")
+@Data
+@NoArgsConstructor
 public class User {
 
     @Id
@@ -19,7 +20,24 @@ public class User {
     private Long userId;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String name;
+
+    @Column(nullable = false)
+    private String imgUrl;
+
+    @Column(nullable = false)
+    private String description;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    @Column(nullable = false)
+    private Integer age;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     @Column(nullable = false)
     private String password;
@@ -27,13 +45,19 @@ public class User {
     @Column(nullable = false)
     private String email;
 
-    @ManyToMany(mappedBy = "participants")
-    private Set<Event> participatingEvents = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @Builder
-    public User(String username, String password, String email) {
-        this.username = username;
-        this.password = password;
-        this.email = email;
+    public User(String name, String imgUrl, String description, Gender gender, Integer age) {
+        this.name = name;
+        this.imgUrl = imgUrl;
+        this.description = description;
+        this.gender = gender;
+        this.age = age;
     }
 }
+
+
+
+
