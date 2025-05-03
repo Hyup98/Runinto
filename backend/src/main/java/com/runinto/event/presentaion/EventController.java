@@ -19,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -64,7 +66,13 @@ public class EventController {
                 .category(EventType.MOVIE)
                 .build();
 
-        testEvent.setEventCategories(Set.of(category));
+        category.setEvent(testEvent);
+        // Set을 생성하여 카테고리를 추가
+        Set<EventCategory> categories = new HashSet<>();
+        categories.add(category);
+        testEvent.setEventCategories(categories); // Event 객체에 카테고리 설정
+
+        // 이벤트 저장 시 Event와 연관된 EventCategory도 함께 저장됩니다 (CascadeType.ALL 설정 시).
         eventService.save(testEvent);
         return ResponseEntity.ok(EventResponse.from(testEvent));
     }

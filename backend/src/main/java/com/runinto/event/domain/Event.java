@@ -13,8 +13,10 @@ import java.util.Set;
 맴버 변수에 연령대 추가 -> 새로운 enum으로 10대 20대등
  */
 
+@Getter
+@Setter
+@ToString(exclude = {"eventCategories", "eventParticipants"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Data
 @Entity
 @Table(name = "event")
 public class Event {
@@ -55,6 +57,19 @@ public class Event {
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventParticipant> eventParticipants = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Event event)) return false;
+        return eventId != null && eventId.equals(event.getEventId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
 
     @Builder
     public Event(String title, Long eventId, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Long chatroomId, int participants, Set<EventCategory> categories) {

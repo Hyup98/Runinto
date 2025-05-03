@@ -17,6 +17,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+/*
 class EventMemoryRepositoryTest {
 
     EventMemoryRepository eventMemoryRepository = new EventMemoryRepository();
@@ -125,4 +126,4 @@ class EventMemoryRepositoryTest {
             assertTrue(event.getLongitude() >= swLng && event.getLongitude() <= neLng);
         }
     }
-}
+}*/

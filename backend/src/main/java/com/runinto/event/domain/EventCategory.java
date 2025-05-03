@@ -3,12 +3,14 @@ package com.runinto.event.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
-@Table(name = "event_category")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "event")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@Entity
+@Table(name = "event_category")
 public class EventCategory {
 
     @Id
@@ -21,5 +23,17 @@ public class EventCategory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
     private Event event;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof EventCategory that)) return false;
+        return id != null && id.equals(that.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
 
