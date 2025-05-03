@@ -2,12 +2,15 @@ package com.runinto.user.presentaion;
 
 import com.runinto.user.domain.User;
 import com.runinto.user.dto.request.UpdateProfileRequest;
+import com.runinto.user.dto.response.EventResponse;
 import com.runinto.user.dto.response.ProfileResponse;
 import com.runinto.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -50,5 +53,11 @@ public class UserController {
 
         ProfileResponse response = ProfileResponse.from(user);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}/joined-events")
+    public ResponseEntity<List<EventResponse>> getJoinedEvents(@PathVariable Long userId) {
+        List<EventResponse> events = userService.getJoinedEvents(userId);
+        return ResponseEntity.ok(events);
     }
 }
