@@ -60,7 +60,13 @@ public class JWTFilter extends OncePerRequestFilter {
         String username = jwtUtil.getUsername(token);
         String role = jwtUtil.getRole(token);
 
-        User userEntity =new User(1L, "test", "IMGURL", "여자", Gender.MALE, 20,"admin","1234", "test");
+        User userEntity =User.builder()
+                .name("테스트유저")
+                .imgUrl("https://example.com/profile.jpg")
+                .description("임시 계정입니다.")
+                .gender(Gender.MALE)
+                .age(25)
+                .build();
         CustomUserDetails customUserDetails = new CustomUserDetails(userEntity);
 
         log.info("1차");

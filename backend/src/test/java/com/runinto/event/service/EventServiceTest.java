@@ -3,6 +3,7 @@ package com.runinto.event.service;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;
+import com.runinto.event.domain.repository.EventH2Repository;
 import com.runinto.event.domain.repository.EventMemoryRepository;
 import com.runinto.event.dto.request.FindEventRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -25,72 +26,77 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 
+
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 class EventServiceTest {
 
     @Mock
-    private EventMemoryRepository eventMemoryRepository;
+    private EventH2Repository eventH2Repository;
 
     @InjectMocks
     private EventService eventService;
 
 
     private Event createMockEvent(Long id, EventType type, double lat, double lng) {
-        return Event.builder()
+        Event event = Event.builder()
                 .eventId(id)
                 .title("이벤트 " + id + " - " + type.name())
                 .description("설명 " + id)
                 .latitude(lat)
                 .longitude(lng)
-                .categories(Set.of(new EventCategory(id, type, id)))
+                .maxParticipants(10)
+                .participants(0)
+                .chatroomId(id)
+                .creationTime(Time.valueOf(LocalTime.now()))
                 .build();
+
+        EventCategory category = EventCategory.builder()
+                .category(type)
+                .event(event)
+                .build();
+
+        event.setEventCategories(Set.of(category));
+        return event;
     }
 
     @Test
     @DisplayName("위치만 일치하고 카테고리는 불일치 → 결과 없음")
     void locationMatchesButCategoryDoesNot() {
-        // given
+        // Given
         Event event = createMockEvent(1L, EventType.TALKING, 37.565, 127.015);
         FindEventRequest request = new FindEventRequest(
                 37.567, 127.017, 37.563, 127.013,
                 Set.of(EventType.EAT)
         );
 
-        lenient().when(eventMemoryRepository.findAll()).thenReturn(List.of(event));
-        lenient().when(eventMemoryRepository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+        when(eventH2Repository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
                 .thenReturn(List.of(event));
-        lenient().when(eventMemoryRepository.findByCategory(anySet()))
-                .thenReturn(List.of());
 
-        // when
+        // When
         List<Event> result = eventService.findByDynamicCondition(request);
 
-        // then
-        assertThat(result.size()).isEqualTo(0);
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("카테고리는 일치하지만 위치는 벗어남 → 결과 없음")
     void categoryMatchesButLocationDoesNot() {
-        // given
         Event event = createMockEvent(2L, EventType.ACTIVITY, 38.000, 128.000); // 범위 밖
         FindEventRequest request = new FindEventRequest(
                 37.567, 127.017, 37.563, 127.013,
                 Set.of(EventType.ACTIVITY)
         );
 
-        lenient().when(eventMemoryRepository.findAll()).thenReturn(List.of(event));
-        lenient().when(eventMemoryRepository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
-                .thenReturn(List.of()); // 위치 불일치
-        lenient().when(eventMemoryRepository.findByCategory(anySet()))
-                .thenReturn(List.of(event)); // 카테고리는 일치
+        when(eventH2Repository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
+                .thenReturn(List.of(event));
 
-        // when
+        // When
         List<Event> result = eventService.findByDynamicCondition(request);
 
-        // then
-        assertTrue(result.isEmpty());
+        // Then
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -103,15 +109,15 @@ class EventServiceTest {
                 Set.of(EventType.EAT)
         );
 
-        lenient().when(eventMemoryRepository.findAll()).thenReturn(List.of(e1, e2));
-        lenient().when(eventMemoryRepository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
-                .thenReturn(List.of(e1, e2));
-        lenient().when(eventMemoryRepository.findByCategory(anySet()))
+        when(eventH2Repository.findByArea(anyDouble(), anyDouble(), anyDouble(), anyDouble()))
                 .thenReturn(List.of(e1, e2));
 
+        // When
         List<Event> result = eventService.findByDynamicCondition(request);
 
-        assertEquals(2, result.size());
-        assertThat(result).extracting(Event::getEventId).containsExactlyInAnyOrder(1L, 2L);
+        // Then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(Event::getEventId)
+                .containsExactlyInAnyOrder(1L, 2L);
     }
 }

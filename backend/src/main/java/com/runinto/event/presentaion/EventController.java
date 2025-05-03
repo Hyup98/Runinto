@@ -19,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +41,40 @@ public class EventController {
         Event event = eventService.findById(eventId).orElseThrow();
         final EventResponse eventResponse = EventResponse.from(event);
         return ResponseEntity.ok(eventResponse);
+    }
+
+    @PostMapping
+    public ResponseEntity<String> CreateEventV1(@RequestBody Event event) {
+        eventService.save(event);
+        return ResponseEntity.ok("create");
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<EventResponse> getTempEvent() {
+
+        Event testEvent = Event.builder()
+                .title("테스트 이벤트")
+                .description("이벤트 설명입니다.")
+                .maxParticipants(10)
+                .latitude(37.5665)
+                .longitude(126.9780)
+                .chatroomId(1L)
+                .participants(0)
+                .build();
+
+        EventCategory category = EventCategory.builder()
+                .category(EventType.MOVIE)
+                .build();
+
+        category.setEvent(testEvent);
+        // Set을 생성하여 카테고리를 추가
+        Set<EventCategory> categories = new HashSet<>();
+        categories.add(category);
+        testEvent.setEventCategories(categories); // Event 객체에 카테고리 설정
+
+        // 이벤트 저장 시 Event와 연관된 EventCategory도 함께 저장됩니다 (CascadeType.ALL 설정 시).
+        eventService.save(testEvent);
+        return ResponseEntity.ok(EventResponse.from(testEvent));
     }
 
     @PatchMapping("{event_id}")

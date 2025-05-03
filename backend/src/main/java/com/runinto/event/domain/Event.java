@@ -1,38 +1,75 @@
 package com.runinto.event.domain;
 
-import com.runinto.chat.domain.Chatroom;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.runinto.user.domain.User;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.sql.Time;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /*todo
 맴버 변수에 연령대 추가 -> 새로운 enum으로 10대 20대등
  */
-@Data
-@NoArgsConstructor
+
+@Getter
+@Setter
+@ToString(exclude = {"eventCategories", "eventParticipants"})
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "event")
 public class Event {
     private static final double EPSILON = 1e-9;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "event_id")
     private Long eventId;
+
+    @Column(nullable = false)
     private String title;
+
     private String description;
+
+    @Column(name = "max_participants", nullable = false)
     private int maxParticipants;
+
+    @Column(name = "creation_time")
     private Time creationTime;
+
+    @Column(nullable = false)
     private double latitude;
+
+    @Column(nullable = false)
     private double longitude;
+
+    @Column(name = "chatroom_id")
     private Long chatroomId;
-    private boolean isPublic;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = true;
+
     private int participants;
 
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventCategory> eventCategories = new HashSet<>();
-    private List<Long> applicants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<EventParticipant> eventParticipants = new HashSet<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Event event)) return false;
+        return eventId != null && eventId.equals(event.getEventId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
 
     @Builder
     public Event(String title, Long eventId, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Long chatroomId, int participants, Set<EventCategory> categories) {
@@ -45,16 +82,19 @@ public class Event {
         this.longitude = longitude;
         this.chatroomId = chatroomId;
         this.eventCategories =categories;
-        this.isPublic = true;
         this.participants = participants;
     }
 
-    public void application(Long userId) {
-        applicants.add(userId);
-    }
+    public void application(User user) {
+        EventParticipant participant = EventParticipant.builder()
+                .event(this)
+                .user(user)
+                .appliedAt(LocalDateTime.now())
+                .status(ParticipationStatus.REQUESTED)
+                .build();
 
-    public boolean isPublic() {
-        return isPublic;
+        this.eventParticipants.add(participant);
+        user.getEventParticipants().add(participant);
     }
 
     public boolean hasMatchingCategory(Set<EventType> categorys) {
@@ -70,5 +110,3 @@ public class Event {
                 longitude <= nelng + EPSILON;
     }
 }
-
-

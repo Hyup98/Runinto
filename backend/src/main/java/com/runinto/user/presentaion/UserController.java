@@ -42,9 +42,9 @@ public class UserController {
 
         if (request.getName() != null) user.setName(request.getName());
         if (request.getAge() != null && request.getAge() >= 1) user.setAge(request.getAge());
-        if (request.getGender() != null) user.setSex(request.getGender());
-        if (request.getDescription() != null) user.setIntro(request.getDescription());
-        if (request.getProfileImg() != null) user.setProfileImageUrl(request.getProfileImg());
+        if (request.getGender() != null) user.setGender(request.getGender());
+        if (request.getDescription() != null) user.setDescription(request.getDescription());
+        if (request.getProfileImg() != null) user.setImgUrl(request.getProfileImg());
 
         userService.saveUser(user);
 
