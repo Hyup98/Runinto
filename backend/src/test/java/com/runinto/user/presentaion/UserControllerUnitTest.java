@@ -1,206 +1,146 @@
 package com.runinto.user.presentaion;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.runinto.user.domain.Gender;
-import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.dto.request.UpdateProfileRequest;
+import com.runinto.user.dto.response.EventResponse;
 import com.runinto.user.dto.response.ProfileResponse;
-
 import com.runinto.user.service.UserService;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-/*
+import static org.springframework.mock.http.server.reactive.MockServerHttpRequest.patch;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
 
 @WebMvcTest(UserController.class)
 class UserControllerUnitTest {
 
     @Autowired
-    private TestRestTemplate restTemplate;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private UserService userService;
 
-    @LocalServerPort
-    private int port;
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    private String baseUrl;
-
-    @BeforeEach
-    void setUp() {
-        baseUrl = "http://localhost:" + port + "/users";
-    }
-
-    //region 유저 조회
     @Test
-    @DisplayName("유저 조회")
-    void getProfile() {
+    @DisplayName("사용자 프로필 조회 성공")
+    void getProfile_success() throws Exception {
+        Long userId = 1L;
+        User dummyUser = createDummyUser(userId);
+        ProfileResponse profile = ProfileResponse.from(dummyUser);
 
-        //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email" );
+        when(userService.getUser(userId)).thenReturn(Optional.of(dummyUser));
 
-        //when
-        when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
-
-        String url = baseUrl + "/profile/1";
-
-        ResponseEntity<ProfileResponse> response =
-                restTemplate.getForEntity(url, ProfileResponse.class);
-
-        //then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-
-        String name = response.getBody().getName();
-
-        assertThat(name).isEqualTo("김영희");
-        assertThat(response.getBody().getGender()).isEqualTo(Gender.MALE);
-        assertThat(response.getBody().getAge()).isEqualTo(20);
+        mockMvc.perform(get("/users/profile/{user_id}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("테스트유저"))
+                .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
     @Test
-    @DisplayName("유저 조회-> id가 없을때")
-    void getProfileNonId() {
+    @DisplayName("사용자 프로필 조회 실패 - 존재하지 않음")
+    void getProfile_notFound() throws Exception {
+        when(userService.getUser(999L)).thenReturn(Optional.empty());
 
-        //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
-
-        //when
-        when(userService.getUser(any())).thenReturn(Optional.empty());
-
-        String url = baseUrl + "/profile/4";
-
-        ResponseEntity<ProfileResponse> response =
-                restTemplate.getForEntity(url, ProfileResponse.class);
-
-        //then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        System.out.println("응답 본문: " + response.getBody());
+        mockMvc.perform(get("/users/profile/{user_id}", 999L))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("유저 조회 -> id가 유효하지 않을때(음수)")
-    void getProfileInvalidIdV1() {
-
-        //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
-
-        //when
-        when(userService.getUser(any())).thenReturn(Optional.empty());
-
-        String url = baseUrl + "/profile/-1";
-
-        ResponseEntity<ProfileResponse> response =
-                restTemplate.getForEntity(url, ProfileResponse.class);
-
-        //then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        System.out.println("응답 본문: " + response.getBody());
-    }
-
-    @Test
-    @DisplayName("유저 조회 -> id가 유효하지 않을때(문자)")
-    void getProfileInvalidIdV2() {
-
-        //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
-
-        //when
-        when(userService.getUser(any())).thenReturn(Optional.empty());
-
-        String url = baseUrl + "/profile/asfmk1@!1";
-
-        ResponseEntity<ProfileResponse> response =
-                restTemplate.getForEntity(url, ProfileResponse.class);
-
-        //then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        System.out.println("응답 본문: " + response.getBody());
-    }
-    //endregion
-
-    //region 프로필 업데이터
-    @Test
-    @DisplayName("유저 프로필 업데이트")
-    void updateProfile() {
-
-        //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
-        when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
+    @DisplayName("사용자 프로필 수정 성공")
+    void updateProfile_success() throws Exception {
+        Long userId = 1L;
+        User dummyUser = createDummyUser(userId);
         UpdateProfileRequest request = UpdateProfileRequest.builder()
-                .age(13)
-                .profileImg("newIMGURL")
-                .description("newDescription")
-                .gender(Gender.MALE)
-                .name("newName")
+                .name("수정유저")
+                .age(25)
+                .gender(Gender.FEMALE)
+                .description("수정된 설명")
+                .imgUrl("newimg.jpg")
                 .build();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<UpdateProfileRequest> entity = new HttpEntity<>(request, headers);
-        String url = baseUrl + "/profile/1";
+        when(userService.getUser(userId)).thenReturn(Optional.of(dummyUser));
+        doNothing().when(userService).saveUser(any(User.class));
 
-        //when
-        ResponseEntity<ProfileResponse> response = restTemplate.exchange(
-                url,
-                HttpMethod.PATCH,
-                entity,
-                ProfileResponse.class
-        );
-
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getName()).isEqualTo("newName");
-
-        System.out.println("응답 본문: " + response.getBody());
+        mockMvc.perform(patch("/users/profile/{user_id}", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("수정유저"))
+                .andExpect(jsonPath("$.imgUrl").value("newimg.jpg"));
     }
 
     @Test
-    @DisplayName("유저 프로필 업데이트 -> 나이가 음수면 처리 x + 안보내면 기존 내용 유지")
-    void updateProfileNonId() {
-
-        //given
-        User dummyUser = new User(1L, "김영희", "IMGURL", "여자", Gender.MALE, 20, "User","password","email");
-        when(userService.getUser(any())).thenReturn(Optional.of(dummyUser));
+    @DisplayName("사용자 프로필 수정 실패 - 유저 없음")
+    void updateProfile_notFound() throws Exception {
         UpdateProfileRequest request = UpdateProfileRequest.builder()
-                .age(- 13)
-                .profileImg("newIMGURL")
-                .description("newDescription")
-                .gender(Gender.MALE)
+                .name("없는유저")
                 .build();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<UpdateProfileRequest> entity = new HttpEntity<>(request, headers);
-        String url = baseUrl + "/profile/1";
+        when(userService.getUser(999L)).thenReturn(Optional.empty());
 
-        //when
-        ResponseEntity<ProfileResponse> response = restTemplate.exchange(
-                url,
-                HttpMethod.PATCH,
-                entity,
-                ProfileResponse.class
-        );
-
-        // then
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getName()).isEqualTo("김영희");
-        assertThat(response.getBody().getAge()).isEqualTo(20);
-
-        System.out.println("응답 본문: " + response.getBody());
+        mockMvc.perform(patch("/users/profile/{user_id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
     }
-    //endregion
 
-}*/
+    @Test
+    @DisplayName("참여한 이벤트 없음")
+    void getJoinedEvents_empty() throws Exception {
+        when(userService.getJoinedEvents(1L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/users/{userId}/joined-events", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("참여한 이벤트 존재")
+    void getJoinedEvents_success() throws Exception {
+        List<EventResponse> events = List.of(
+                new EventResponse(1L, "이벤트1", "설명", 10, 3, 37.5, 127.0, List.of())
+        );
+        when(userService.getJoinedEvents(1L)).thenReturn(events);
+
+        mockMvc.perform(get("/users/{userId}/joined-events", 1L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].title").value("이벤트1"));
+    }
+
+    private User createDummyUser(Long userId) {
+        return User.builder()
+                .userId(userId)
+                .name("테스트유저")
+                .email("test@example.com")
+                .password("1234")
+                .imgUrl("img.jpg")
+                .description("설명")
+                .gender(Gender.MALE)
+                .age(30)
+                .role(Role.USER)
+                .eventParticipants(Collections.emptySet())
+                .build();
+    }
+}

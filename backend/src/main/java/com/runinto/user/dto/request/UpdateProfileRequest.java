@@ -9,6 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Builder
 public class UpdateProfileRequest {
+    private Long userId;
     private String name;
     private Integer age;
     private String description;

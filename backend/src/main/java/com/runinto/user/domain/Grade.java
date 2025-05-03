@@ -1,4 +1,7 @@
 package com.runinto.user.domain;
 
-public class Grade {
+public enum Grade {
+    NORMAL,
+    VIP,
+    VVIP
 }

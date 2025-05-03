@@ -29,9 +29,6 @@ class UserH2RepositoryTest {
     private UserH2Repository userH2Repository;
 
     @Autowired
-    private UserJpaRepository userJpaRepository;
-
-    @Autowired
     private EventJpaRepository eventJpaRepository;
 
     private User user;
@@ -55,7 +52,7 @@ class UserH2RepositoryTest {
 
     @AfterEach
     void tearDown() {
-        userJpaRepository.deleteAll();
+        userH2Repository.deleteAll();
     }
 
     @Test
@@ -82,7 +79,7 @@ class UserH2RepositoryTest {
 
         userH2Repository.save(newUser);
 
-        Optional<User> saved = userJpaRepository.findById(newUser.getUserId());
+        Optional<User> saved = userH2Repository.findById(newUser.getUserId());
         assertTrue(saved.isPresent());
         assertEquals("new@example.com", saved.get().getEmail());
     }
@@ -128,7 +125,7 @@ class UserH2RepositoryTest {
         user.getEventParticipants().add(participation);
 
         eventJpaRepository.save(event);
-        userJpaRepository.save(user);
+        userH2Repository.save(user);
 
         List<Event> events = userH2Repository.findJoinedEvents(user.getUserId());
         assertEquals(1, events.size());

@@ -39,4 +39,8 @@ public class UserH2Repository implements UserRepositoryImple {
     public List<Event> findJoinedEvents(Long userId) {
         return userJpaRepository.findJoinedEvents(userId);
     }
+
+    public void deleteAll() {
+        userJpaRepository.deleteAll();
+    }
 }
