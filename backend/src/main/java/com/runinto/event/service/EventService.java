@@ -5,6 +5,7 @@ import com.runinto.event.domain.EventType;
 import com.runinto.event.domain.repository.EventH2Repository;
 import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.event.dto.request.FindEventRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ public class EventService {
         return eventRepository.findAll();
     }
 
+    @Transactional
     public void save(Event event) {
         eventRepository.save(event);
     }
@@ -57,9 +59,11 @@ public class EventService {
                 .toList();
     }
 
+    @Transactional
     public boolean delete(long id) {
         return eventRepository.delete(id);
     }
 
+    @Transactional
     public void clear() {eventRepository.clear();}
 }

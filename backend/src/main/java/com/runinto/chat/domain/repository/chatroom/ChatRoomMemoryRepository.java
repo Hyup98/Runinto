@@ -1,6 +1,5 @@
-package com.runinto.chat.domain.repository;
+package com.runinto.chat.domain.repository.chatroom;
 
-import com.runinto.chat.domain.Chatroom;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;

@@ -1,6 +1,6 @@
 package com.runinto.chat.dto.response;
 
-import com.runinto.chat.domain.ChatMessage;
+import com.runinto.chat.domain.repository.message.ChatMessage;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

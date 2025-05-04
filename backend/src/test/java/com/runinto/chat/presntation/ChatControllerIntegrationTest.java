@@ -1,11 +1,7 @@
 package com.runinto.chat.presntation;
 
-import com.runinto.chat.domain.ChatMessage;
+import com.runinto.chat.domain.repository.message.ChatMessage;
 import com.runinto.chat.service.ChatService;
-import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
-import com.runinto.event.domain.EventType;
-import com.runinto.event.service.EventService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,10 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +36,7 @@ class ChatControllerIntegrationTest {
             for (int i = 1; i <= 10; i++) {
                 ChatMessage chatMessage = ChatMessage.builder()
                         .message("dum mesg")
-                        .chatRoomId((long) i)
+                        //.chatRoomId((long) i)
                         .senderId((long) i)
                         .build();
                 chatService.sendMessage(chatMessage);

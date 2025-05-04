@@ -1,9 +1,7 @@
 package com.runinto.event.dto.response;
 
-import com.runinto.chat.domain.Chatroom;
 import com.runinto.event.domain.Event;
 import lombok.Data;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.sql.Time;

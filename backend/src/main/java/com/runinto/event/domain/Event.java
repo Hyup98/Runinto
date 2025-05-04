@@ -1,5 +1,6 @@
 package com.runinto.event.domain;
 
+import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,7 +16,7 @@ import java.util.Set;
 
 @Getter
 @Setter
-@ToString(exclude = {"eventCategories", "eventParticipants"})
+@ToString(exclude = {"chatroom", "eventParticipants", "eventCategories"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "event")
@@ -44,13 +45,13 @@ public class Event {
     @Column(nullable = false)
     private double longitude;
 
-    @Column(name = "chatroom_id")
-    private Long chatroomId;
-
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = true;
 
     private int participants;
+
+    @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private Chatroom chatroom;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventCategory> eventCategories = new HashSet<>();
@@ -72,7 +73,7 @@ public class Event {
 
 
     @Builder
-    public Event(String title, Long eventId, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Long chatroomId, int participants, Set<EventCategory> categories) {
+    public Event(String title, Long eventId, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroomId, int participants, Set<EventCategory> categories) {
         this.title = title;
         this.eventId = eventId;
         this.description = description;
@@ -80,7 +81,7 @@ public class Event {
         this.creationTime = creationTime;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.chatroomId = chatroomId;
+        this.chatroom = chatroomId;
         this.eventCategories =categories;
         this.participants = participants;
     }
