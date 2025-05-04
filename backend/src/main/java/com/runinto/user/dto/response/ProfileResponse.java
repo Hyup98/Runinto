@@ -13,9 +13,10 @@ public class ProfileResponse {
     private final String imgUrl;
     private final String description;
     private final Gender gender;
-    private final int age;
+    private final String email;
+    private final Integer age;
 
     public static ProfileResponse from(final User user) {
-        return new ProfileResponse(user.getName(), user.getImgUrl(), user.getDescription(), user.getGender(), user.getAge());
+        return new ProfileResponse(user.getName(), user.getImgUrl(), user.getDescription(), user.getGender(), user.getEmail(), user.getAge());
     }
-}
+};

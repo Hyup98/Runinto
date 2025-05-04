@@ -1,11 +1,13 @@
 package com.runinto.user.domain.repository;
 
+import com.runinto.event.domain.Event;
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,5 +33,10 @@ public class UserMemoryRepository implements UserRepositoryImple{
 
     public int getSize() {
         return users.size();
+    }
+
+    @Override
+    public List<Event> findJoinedEvents(Long userId) {
+        return List.of();
     }
 }

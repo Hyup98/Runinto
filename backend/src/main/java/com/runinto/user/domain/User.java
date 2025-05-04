@@ -11,10 +11,12 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Setter
+@Getter
+@ToString(exclude = "eventParticipants")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
 public class User {
 
     @Id
@@ -55,12 +57,16 @@ public class User {
     private Set<ChatroomParticipant> chatParticipations;
 
     @Builder
-    public User(String name, String imgUrl, String description, Gender gender, Integer age) {
+    public User(String name, String email, String password, String imgUrl, String description, Gender gender, Integer age, Role role, Set<EventParticipant> eventParticipants) {
         this.name = name;
         this.imgUrl = imgUrl;
         this.description = description;
         this.gender = gender;
         this.age = age;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.eventParticipants = eventParticipants;
     }
 
     @Override
