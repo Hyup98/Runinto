@@ -18,7 +18,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+  web:
+    resources:
+      static-locations: file:uploads/
+  mvc:
+    static-path-pattern: /images/**
 server:
   port: 8080
 
