@@ -12,16 +12,18 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class webSocketConfig implements WebSocketConfigurer {
 
     private final CustomWebSocketHandler customWebSocketHandler;
+    private final UserHandshakeInterceptor userHandshakeInterceptor;
 
-    public webSocketConfig(CustomWebSocketHandler customWebSocketHandler) {
+    public webSocketConfig(CustomWebSocketHandler customWebSocketHandler, UserHandshakeInterceptor userHandshakeInterceptor) {
         this.customWebSocketHandler = customWebSocketHandler;
+        this.userHandshakeInterceptor = userHandshakeInterceptor;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(customWebSocketHandler, "/ws/chat")
                 //.addInterceptors(new AuthHandshakeInterceptor()) // (인증 처리: 나중에 활성화)
-                .addInterceptors(new UserHandshakeInterceptor())
+                .addInterceptors(userHandshakeInterceptor)
                 .setAllowedOrigins("*");
     }
 }

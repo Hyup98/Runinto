@@ -1,5 +1,8 @@
 package com.runinto.event.presentaion;
 
+import com.runinto.chat.domain.repository.chatroom.Chatroom;
+import com.runinto.chat.presntation.ChatController;
+import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;
@@ -9,6 +12,8 @@ import com.runinto.event.dto.request.UpdateEventRequest;
 import com.runinto.event.dto.response.EventListResponse;
 import com.runinto.event.dto.response.EventResponse;
 import com.runinto.event.service.EventService;
+import com.runinto.user.domain.User;
+import com.runinto.user.service.UserService;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +36,13 @@ import java.util.Set;
 public class EventController {
 
     private final EventService eventService;
+    private final UserService userService;
+    private final ChatService chatService;
 
-    public EventController(final EventService eventService) {
+    public EventController(final EventService eventService, final UserService userService, ChatService chatService) {
+        this.userService = userService;
         this.eventService = eventService;
+        this.chatService = chatService;
     }
 
     @GetMapping("{event_id}")
@@ -43,10 +52,20 @@ public class EventController {
         return ResponseEntity.ok(eventResponse);
     }
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<String> CreateEventV1(@RequestBody Event event) {
         eventService.save(event);
         return ResponseEntity.ok("create");
+    }*/
+
+    //채팅방도 함께 생성해주는 이벤트 생성함수
+    @PostMapping
+    public ResponseEntity<EventResponse> createEventV2(@RequestBody Event event) {
+        log.info("Creating event: {}", event.getTitle());
+
+        Event saved = eventService.createEventWithChatroom(event);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(EventResponse.from(saved));
     }
 
     @GetMapping("/test")
@@ -58,7 +77,7 @@ public class EventController {
                 .maxParticipants(10)
                 .latitude(37.5665)
                 .longitude(126.9780)
-                .chatroomId(1L)
+                //.chatroom(1L)
                 .participants(0)
                 .build();
 
@@ -104,22 +123,25 @@ public class EventController {
      */
     @GetMapping()
     public ResponseEntity<EventListResponse> GetAllEventsV1(
-            @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") Double swLat,
-            @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") Double neLat,
-            @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") Double swLng,
-            @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") Double neLng,
+            @RequestParam(required = false) @DecimalMin("-90.0") @DecimalMax("90.0") Double swLat,
+            @RequestParam(required = false) @DecimalMin("-90.0") @DecimalMax("90.0") Double neLat,
+            @RequestParam(required = false) @DecimalMin("-180.0") @DecimalMax("180.0") Double swLng,
+            @RequestParam(required = false) @DecimalMin("-180.0") @DecimalMax("180.0") Double neLng,
             @RequestParam(required = false) Set<EventType> category,
             @RequestParam(required = false) Boolean isPublic
             ) {
         //위도 경도 범위 체크
-        if (neLat < swLat || neLng < swLng) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 범위입니다.");
+        if (swLat != null && swLng != null && neLat != null && neLng != null) {
+            if (neLat < swLat || neLng < swLng) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 범위입니다.");
+            }
         }
+
         FindEventRequest condition = FindEventRequest.builder()
-                .swlatitude(37.50)
-                .nelatitude(37.60)
-                .swlongitude(127.00)
-                .nelongitude(127.10)
+                .swlatitude(swLat)
+                .nelatitude(neLat)
+                .swlongitude(swLng)
+                .nelongitude(neLng)
                 .categories(category)
                 .build();
 
@@ -145,6 +167,7 @@ public class EventController {
     }
 
     //이벤트 참여 요청 -> 채팅 서버를 따로 빼서 관리
+    //              -> 일단 무조건 채팅도 같이 참여되게 설정 -> 종속관계
     @PostMapping("{event_id}/participants")
     public ResponseEntity<String> AddParticipantV1(
             @PathVariable("event_id") Long eventId,
@@ -159,7 +182,19 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("참여 인원이 가득 찼습니다.");
         }
+        User user = userService.getUser(joinEventRequest.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저 없음"));
+
+        event.application(user); // 실제 참여 추가
+        event.setParticipants(event.getParticipants() + 1);
+        eventService.save(event); // 저장
+
+        Chatroom chatroom = chatService.getChatroomByEventId(eventId);
+        chatroom.addParticipant(user);
+        chatService.save(chatroom);
 
         return ResponseEntity.ok("이벤트에 성공적으로 참여했습니다.");
     }
+
+
 }

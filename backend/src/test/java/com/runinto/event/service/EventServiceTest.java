@@ -4,10 +4,8 @@ import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;
 import com.runinto.event.domain.repository.EventH2Repository;
-import com.runinto.event.domain.repository.EventMemoryRepository;
 import com.runinto.event.dto.request.FindEventRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,9 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 
@@ -117,7 +113,7 @@ class EventServiceTest {
 
         // Then
         assertThat(result).hasSize(2);
-        assertThat(result).extracting(Event::getEventId)
+        assertThat(result).extracting(Event::getId)
                 .containsExactlyInAnyOrder(1L, 2L);
     }
 }

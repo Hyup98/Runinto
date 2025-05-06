@@ -88,7 +88,7 @@ class EventH2RepositoryUnitTest {
         eventH2Repository.save(event);
 
         // When
-        Long id = event.getEventId();
+        Long id = event.getId();
         Optional<Event> eventOptional = eventH2Repository.findById(id);
 
         // Then
@@ -123,8 +123,8 @@ class EventH2RepositoryUnitTest {
         eventH2Repository.save(event);
 
         // Then
-        assertNotNull(event.getEventId());
-        Optional<Event> savedEvent = eventH2Repository.findById(event.getEventId());
+        assertNotNull(event.getId());
+        Optional<Event> savedEvent = eventH2Repository.findById(event.getId());
         assertTrue(savedEvent.isPresent());
         assertEquals("새 이벤트", savedEvent.get().getTitle());
         assertEquals(1, savedEvent.get().getEventCategories().size());

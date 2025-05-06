@@ -18,7 +18,7 @@ public class EventMemoryRepository implements EventRepositoryImple{
     }
 
     public void save(Event event) {
-        events.put(event.getEventId(), event);
+        events.put(event.getId(), event);
         log.info("Saved event {}, MapSizes : {}", event, events.size());
     }
 
@@ -47,4 +47,5 @@ public class EventMemoryRepository implements EventRepositoryImple{
     }
 
     public void clear() {events.clear();}
+
 }

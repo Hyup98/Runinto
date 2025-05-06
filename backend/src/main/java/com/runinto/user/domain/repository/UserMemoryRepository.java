@@ -20,7 +20,14 @@ public class UserMemoryRepository implements UserRepositoryImple{
     public Optional<User> findById(Long id) {
         log.info("Find User by id: {}", id);
         return Optional.ofNullable(users.get(id));
-    };
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return Optional.empty();
+    }
+
+    ;
 
     public void save(User user) {
         users.put(user.getUserId(), user);

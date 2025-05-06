@@ -11,7 +11,7 @@ public class EventResponse {
     private String title;
 
     public static EventResponse from(Event event) {
-        return new EventResponse(event.getEventId(), event.getTitle());
+        return new EventResponse(event.getId(), event.getTitle());
     }
 
 }

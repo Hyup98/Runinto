@@ -1,5 +1,6 @@
 package com.runinto.chat.domain.repository.chatroom;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.runinto.chat.domain.repository.message.ChatMessage;
 import com.runinto.event.domain.Event;
 import com.runinto.user.domain.User;
@@ -17,10 +18,11 @@ public class Chatroom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long chatroomid;
+    private Long id;
 
-    @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
+    @JsonManagedReference
     private Event event;
 
     @OneToMany(mappedBy = "chatroom", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -28,6 +30,19 @@ public class Chatroom {
 
     @OneToMany(mappedBy = "chatroom", cascade = CascadeType.ALL)
     private Set<ChatroomParticipant> participants;
+
+    @Builder
+    public Chatroom(Event event, List<ChatMessage> messages, Set<ChatroomParticipant> participants) {
+        this.event = event;
+        if (messages != null) {
+            this.messages = messages;
+        }
+        if (participants != null) {
+            this.participants = participants;
+        } else {
+            this.participants = new HashSet<>();
+        }
+    }
 
     public void addParticipant(User user) {
         participants.add(ChatroomParticipant.builder()
@@ -49,11 +64,11 @@ public class Chatroom {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Chatroom chatroom)) return false;
-        return chatroomid != null && chatroomid.equals(chatroom.chatroomid);
+        return id != null && id.equals(chatroom.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(chatroomid);
+        return Objects.hashCode(id);
     }
 }

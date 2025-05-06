@@ -1,5 +1,6 @@
 package com.runinto.event.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.user.domain.User;
 import jakarta.persistence.*;
@@ -26,7 +27,7 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
-    private Long eventId;
+    private Long id;
 
     @Column(nullable = false)
     private String title;
@@ -51,6 +52,7 @@ public class Event {
     private int participants;
 
     @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonBackReference
     private Chatroom chatroom;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -63,7 +65,7 @@ public class Event {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Event event)) return false;
-        return eventId != null && eventId.equals(event.getEventId());
+        return id != null && id.equals(event.getId());
     }
 
     @Override
@@ -73,15 +75,15 @@ public class Event {
 
 
     @Builder
-    public Event(String title, Long eventId, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroomId, int participants, Set<EventCategory> categories) {
+    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, int participants, Set<EventCategory> categories) {
         this.title = title;
-        this.eventId = eventId;
+        this.id = id;
         this.description = description;
         this.maxParticipants = maxParticipants;
         this.creationTime = creationTime;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.chatroom = chatroomId;
+        this.chatroom = chatroom;
         this.eventCategories =categories;
         this.participants = participants;
     }

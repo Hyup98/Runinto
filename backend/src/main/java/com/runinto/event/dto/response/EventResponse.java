@@ -36,7 +36,7 @@ public class EventResponse {
     }
 
     public static EventResponse from(final Event event) {
-        return new EventResponse(event.getEventId(), event.getDescription(),event.getChatroomId(),
+        return new EventResponse(event.getId(), event.getDescription(),event.getId(),
                 event.getTitle(), event.getParticipants(), event.getMaxParticipants(), event.getCreationTime(),
                 event.getLatitude(), event.getLongitude(),event.isPublic());
     }
