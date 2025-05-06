@@ -1,145 +1,56 @@
 package com.runinto.chat.presntation;
 
-import com.runinto.chat.domain.ChatMessage;
-import com.runinto.chat.domain.Chatroom;
+import com.runinto.chat.domain.repository.message.ChatMessage;
+import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.chat.dto.request.ChatMessageRequest;
 import com.runinto.chat.dto.response.ChatMessageResponse;
 import com.runinto.chat.dto.response.ChatroomResponse;
 import com.runinto.chat.dto.response.ParticipantResponse;
 import com.runinto.chat.service.ChatService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Time;
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
+@Validated
 @RestController
 @RequestMapping("/events/{eventId}/chatroom")
+@RequiredArgsConstructor
 public class ChatController {
 
     private final ChatService chatService;
 
-    public ChatController(ChatService chatService) {
-        this.chatService = chatService;
-    }
-
-    // 채팅방 생성 요청
     @PostMapping
-    public ResponseEntity<Void> createChatroomV1(@PathVariable Long eventId) {
-        Long chatRoomId = chatService.createChatRoom();
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<ChatroomResponse> createChatroom(@PathVariable @NotNull Long eventId) {
+        log.info("Creating chatroom for event with ID: {}", eventId);
+        Chatroom chatroom = chatService.createChatRoomForEvent(eventId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ChatroomResponse(chatroom.getId()));
     }
 
-    // 채팅방 조회 요청
     @GetMapping
-    public ResponseEntity<ChatroomResponse> getChatroom(@PathVariable Long eventId) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent()) {
-            // TODO: Convert Chatroom to ChatroomResponse
-            ChatroomResponse response = new ChatroomResponse(chatroom.get().getId());
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ChatroomResponse> getChatroom(@PathVariable @NotNull Long eventId) {
+        log.info("Getting chatroom for event with ID: {}", eventId);
+        Chatroom chatroom = chatService.getChatroomByEventId(eventId);
+        return ResponseEntity.ok(new ChatroomResponse(chatroom.getId()));
     }
 
-    // 채팅방 삭제 요청
     @DeleteMapping
-    public ResponseEntity<Void> deleteChatroom(@PathVariable Long eventId) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent()) {
-            chatService.deleteChatroom(eventId);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> deleteChatroom(@PathVariable @NotNull Long eventId) {
+        log.info("Deleting chatroom for event with ID: {}", eventId);
+        chatService.deleteChatroomByEventId(eventId);
+        return ResponseEntity.noContent().build();
     }
 
-    // 메시지 전송 요청
-    @PostMapping("/messages")
-    public ResponseEntity<Void> sendMessage(
-            @PathVariable Long eventId,
-            @RequestBody ChatMessageRequest request
-    ) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent()) {
-            ChatMessage message = ChatMessage.builder()
-                    .chatRoomId(eventId)
-                    .senderId(request.getSenderId())
-                    .message(request.getMessage())
-                    .sendTime(new Time(System.currentTimeMillis()))
-                    .build();
-            chatService.sendMessage(message);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // 메시지 목록 요청
-    @GetMapping("/messages")
-    public ResponseEntity<List<ChatMessageResponse>> getMessages(@PathVariable Long eventId) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent()) {
-            Optional<List<ChatMessage>> messages = chatService.findChatMessagesByRoomId(eventId);
-            if (messages.isPresent()) {
-                List<ChatMessageResponse> responseList = messages.get().stream()
-                        .map(ChatMessageResponse::from)
-                        .toList();
-                return ResponseEntity.ok(responseList);
-            } else {
-                return ResponseEntity.ok(List.of()); // Return empty list
-            }
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // 참여자 목록 요청
-    @GetMapping("/participants")
-    public ResponseEntity<List<ParticipantResponse>> getParticipants(@PathVariable Long eventId) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent() && chatroom.get().getApplicants() != null) {
-            // TODO: Convert applicants list to ParticipantResponse list
-            return ResponseEntity.ok().build();
-        } else if (chatroom.isPresent()) {
-            return ResponseEntity.ok().build(); // Return empty list
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // 채팅방 참여 요청
-    @PostMapping("/participants")
-    public ResponseEntity<Void> joinChatroom(
-            @PathVariable Long eventId,
-            @RequestParam Long userId
-    ) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent()) {
-            chatService.addParticipant(eventId, userId);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // 채팅방 퇴장 요청
-    @DeleteMapping("/participants")
-    public ResponseEntity<Void> leaveChatroom(
-            @PathVariable Long eventId,
-            @RequestParam Long userId
-    ) {
-        Optional<Chatroom> chatroom = chatService.findChatroomById(eventId);
-        if (chatroom.isPresent()) {
-            chatService.removeParticipant(eventId, userId);
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
 }

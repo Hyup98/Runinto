@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserJpaRepository extends JpaRepository<User, Long> {
@@ -17,4 +18,6 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
         WHERE ep.user.userId = :userId
     """)
     List<Event> findJoinedEvents(@Param("userId") Long userId);
+
+    Optional<User> findByEmail(String email);
 }

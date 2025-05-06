@@ -1,6 +1,5 @@
-package com.runinto.chat.domain.repository;
+package com.runinto.chat.domain.repository.message;
 
-import com.runinto.chat.domain.ChatMessage;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -10,7 +9,7 @@ import java.util.Optional;
 @Repository
 public class ChatMessageMemoryRepository {
 
-    ArrayList<ChatMessage> messages = new ArrayList<>();
+/*    ArrayList<ChatMessage> messages = new ArrayList<>();
 
     public Optional<List<ChatMessage>> getMessages(Long chatRoomId) {
         List<ChatMessage> ans = new ArrayList<>();
@@ -36,6 +35,6 @@ public class ChatMessageMemoryRepository {
 
     public void clear() {
         messages.clear();
-    }
+    }*/
 
 }

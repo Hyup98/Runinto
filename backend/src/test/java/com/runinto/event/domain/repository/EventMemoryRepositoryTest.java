@@ -1,20 +1,5 @@
 package com.runinto.event.domain.repository;
 
-import com.runinto.chat.domain.Chatroom;
-import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
-import com.runinto.event.domain.EventType;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.sql.Time;
-import java.time.LocalTime;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /*

@@ -36,6 +36,12 @@ public class UserH2Repository implements UserRepositoryImple {
         log.info("Deleted user with id: {}", id);
     }
 
+    @Override
+    public Optional<User> findByEmail(String email) {
+        log.info("Find User by email: {}", email);
+        return userJpaRepository.findByEmail(email);
+    }
+
     public List<Event> findJoinedEvents(Long userId) {
         return userJpaRepository.findJoinedEvents(userId);
     }

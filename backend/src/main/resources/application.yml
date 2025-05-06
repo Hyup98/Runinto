@@ -20,9 +20,8 @@ spring:
         format_sql: true
   web:
     resources:
-      static-locations: file:uploads/
+      static-locations: classpath:/static/, file:uploads/
   mvc:
-    static-path-pattern: /images/**
+    static-path-pattern: /**
 server:
   port: 8080
-

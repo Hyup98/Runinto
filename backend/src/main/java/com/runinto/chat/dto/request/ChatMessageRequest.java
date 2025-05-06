@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 public class ChatMessageRequest {
     private Long senderId;
     private String message;
-    private String chatRoomId;
+    private Long chatRoomId;
 }

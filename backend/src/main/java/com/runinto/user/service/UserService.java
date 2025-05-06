@@ -25,6 +25,10 @@ public class UserService {
         return userH2Repository.findById(userId);
     }
 
+    public Optional<User> findByEmail(final String email) {
+        return userH2Repository.findByEmail(email);
+    }
+
     public void saveUser(final User user) {
         userH2Repository.save(user);
     }

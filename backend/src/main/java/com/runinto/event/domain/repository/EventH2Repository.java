@@ -57,5 +57,4 @@ public class EventH2Repository implements EventRepositoryImple {
     public void clear() {
         eventJpaRepository.deleteAll();
     }
-
 }

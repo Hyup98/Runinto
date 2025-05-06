@@ -1,6 +1,5 @@
-package com.runinto.chat.domain.repository;
+package com.runinto.chat.domain.repository.chatroom;
 
-import com.runinto.chat.domain.Chatroom;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -10,6 +9,7 @@ import java.util.Optional;
 @Repository
 public class ChatRoomMemoryRepository {
 
+/*
     private Map<Long, Chatroom> chatRooms = new HashMap<>();
 
     public Optional<Chatroom> getChatroom(Long id) {
@@ -23,5 +23,6 @@ public class ChatRoomMemoryRepository {
     public void deleteChatroom(Long id) {
         chatRooms.remove(id);
     }
+*/
 
 }

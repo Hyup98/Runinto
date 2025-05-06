@@ -1,9 +1,7 @@
 package com.runinto.event.dto.response;
 
-import com.runinto.chat.domain.Chatroom;
 import com.runinto.event.domain.Event;
 import lombok.Data;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.sql.Time;
@@ -38,7 +36,7 @@ public class EventResponse {
     }
 
     public static EventResponse from(final Event event) {
-        return new EventResponse(event.getEventId(), event.getDescription(),event.getChatroomId(),
+        return new EventResponse(event.getId(), event.getDescription(),event.getId(),
                 event.getTitle(), event.getParticipants(), event.getMaxParticipants(), event.getCreationTime(),
                 event.getLatitude(), event.getLongitude(),event.isPublic());
     }
