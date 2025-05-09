@@ -28,7 +28,7 @@ public class EventControllerUnitTest {
     @Test
     void testGetAllEventsWithQueryParams() throws Exception {
         List<Event> dummyEvents = List.of(
-                Event.builder().eventId(1L).title("이벤트 1").build()
+                Event.builder().id(1L).title("이벤트 1").build()
         );
 
         when(eventService.findByDynamicCondition(any())).thenReturn(dummyEvents);

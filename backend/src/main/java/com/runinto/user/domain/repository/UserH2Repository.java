@@ -25,9 +25,9 @@ public class UserH2Repository implements UserRepositoryImple {
     }
 
     @Override
-    public void save(User user) {
-        userJpaRepository.save(user);
+    public User save(User user) {
         log.info("Saved user: {}", user);
+        return userJpaRepository.save(user);
     }
 
     @Override
@@ -49,4 +49,15 @@ public class UserH2Repository implements UserRepositoryImple {
     public void deleteAll() {
         userJpaRepository.deleteAll();
     }
+
+    @Override
+    public boolean existsByName(String name) {
+        return userJpaRepository.existsByName(name);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userJpaRepository.existsByEmail(email);
+    }
+
 }

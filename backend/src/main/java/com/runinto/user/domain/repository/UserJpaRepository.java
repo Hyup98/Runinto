@@ -13,11 +13,15 @@ import java.util.Optional;
 @Repository
 public interface UserJpaRepository extends JpaRepository<User, Long> {
     @Query("""
-        SELECT ep.event 
-        FROM EventParticipant ep 
-        WHERE ep.user.userId = :userId
+        SELECT e.event 
+        FROM EventParticipant e 
+        WHERE e.user.userId = :userId
     """)
     List<Event> findJoinedEvents(@Param("userId") Long userId);
 
     Optional<User> findByEmail(String email);
+
+    boolean existsByName(String name);
+
+    boolean existsByEmail(String email);
 }

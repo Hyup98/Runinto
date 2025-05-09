@@ -1,6 +1,8 @@
 package com.runinto.user.service;
 
 import com.runinto.event.domain.Event;
+import com.runinto.exception.UserEmailAlreadyExistsException;
+import com.runinto.exception.UserNameAlreadyExistsException;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
 import com.runinto.user.domain.repository.UserRepositoryImple;
@@ -40,4 +42,21 @@ public class UserService {
                 .toList();
     }
 
+    public User registerUser(final User user) {
+        if(userH2Repository.existsByName(user.getName())) {
+            throw new UserNameAlreadyExistsException("User with name '" + user.getName() + "' already exists.");
+        }
+        if(userH2Repository.existsByEmail(user.getEmail())) {
+            throw new UserEmailAlreadyExistsException("User with email '" + user.getEmail() + "' already exists.");
+        }
+        return userH2Repository.save(user);
+    }
+
+    public boolean existsByName(String name) {
+        return userH2Repository.existsByName(name);
+    }
+
+    public boolean existsByEmail(String email) {
+        return userH2Repository.existsByEmail(email);
+    }
 }

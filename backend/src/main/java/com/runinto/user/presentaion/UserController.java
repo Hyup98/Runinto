@@ -9,44 +9,76 @@ import com.runinto.user.dto.request.UpdateProfileRequest;
 import com.runinto.user.dto.response.EventResponse;
 import com.runinto.user.dto.response.ProfileResponse;
 import com.runinto.user.service.UserService;
+import com.runinto.util.ImageStorageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
 
-    private final UserService userService;
+    @Value("${user.default-profile}")
+    private String defaultProfilePath;
 
-    public UserController(UserService userService) {
+    private final UserService userService;
+    private final ImageStorageService imageStorageService;
+
+    public UserController(UserService userService, ImageStorageService imageStorageService) {
         this.userService = userService;
+        this.imageStorageService = imageStorageService;
     }
 
-    @Transactional
-    @PostMapping("/register")
-    public ResponseEntity<ProfileResponse> register(@RequestBody RegisterRequest request) {
-        log.info("Registering new user: {}", request.getName());
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> register(
+            @RequestPart("profile") RegisterRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
 
+        // 1. 이름 / 이메일 중복 검사
+        if (userService.existsByName(request.getName())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 존재하는 이름입니다.");
+        }
+        if (userService.existsByEmail(request.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 존재하는 이메일입니다.");
+        }
+
+        // 2. 이미지 저장
+        String imgUrl = null;
+        if (imageFile != null && !imageFile.isEmpty()) {
+            imgUrl = imageStorageService.saveImage(imageFile);
+        }
+        else {
+            imgUrl = defaultProfilePath;
+        }
+
+        // 3. 유저 저장
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(request.getPassword())
-                .imgUrl(request.getImgUrl())
+                .imgUrl(imgUrl)
                 .description(request.getDescription())
                 .gender(request.getGender())
                 .age(request.getAge())
                 .role(request.getRole() != null ? request.getRole() : Role.USER)
                 .build();
 
-        userService.saveUser(user);
+        userService.registerUser(user);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ProfileResponse.from(user));

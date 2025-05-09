@@ -9,7 +9,9 @@ import java.util.Optional;
 public interface  UserRepositoryImple {
     public Optional<User> findById(Long id);
     public Optional<User> findByEmail(String email);
-    public void save(User user);
+    public User save(User user);
     public void delete(Long id);
     List<Event> findJoinedEvents(Long userId);
+    public boolean existsByName(String name);
+    public boolean existsByEmail(String email);
 }

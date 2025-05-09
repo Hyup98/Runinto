@@ -1,4 +1,4 @@
-package com.runinto.util;
+package com.runinto.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

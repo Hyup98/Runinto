@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/*
 @Slf4j
 @Repository
 public class UserMemoryRepository implements UserRepositoryImple{
@@ -47,3 +48,4 @@ public class UserMemoryRepository implements UserRepositoryImple{
         return List.of();
     }
 }
+*/
