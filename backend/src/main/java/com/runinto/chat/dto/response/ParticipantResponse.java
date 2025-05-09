@@ -17,11 +17,6 @@ public class ParticipantResponse {
     private String description;
     private Integer age;
 
-    /**
-     * Create a ParticipantResponse from a User
-     * @param user the user
-     * @return a ParticipantResponse
-     */
     public static ParticipantResponse from(User user) {
         return ParticipantResponse.builder()
                 .userId(user.getUserId())

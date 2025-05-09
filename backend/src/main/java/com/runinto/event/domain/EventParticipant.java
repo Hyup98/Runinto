@@ -2,17 +2,16 @@ package com.runinto.event.domain;
 
 import com.runinto.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "event_participant")
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class EventParticipant {
@@ -32,5 +31,5 @@ public class EventParticipant {
     private LocalDateTime appliedAt;
 
     @Enumerated(EnumType.STRING)
-    private ParticipationStatus status; // 예: "신청", "승인", "거절"
+    private ParticipationStatus status;
 }

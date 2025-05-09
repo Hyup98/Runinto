@@ -1,14 +1,10 @@
 package com.runinto.user.service;
 
-import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventParticipant;
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
-import com.runinto.user.domain.repository.UserMemoryRepository;
 import com.runinto.user.dto.response.EventResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,10 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 

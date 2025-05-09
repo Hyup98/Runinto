@@ -52,12 +52,6 @@ public class EventController {
         return ResponseEntity.ok(eventResponse);
     }
 
-    /*@PostMapping
-    public ResponseEntity<String> CreateEventV1(@RequestBody Event event) {
-        eventService.save(event);
-        return ResponseEntity.ok("create");
-    }*/
-
     //채팅방도 함께 생성해주는 이벤트 생성함수
     @PostMapping
     public ResponseEntity<EventResponse> createEventV2(@RequestBody Event event) {
@@ -182,8 +176,7 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("참여 인원이 가득 찼습니다.");
         }
-        User user = userService.getUser(joinEventRequest.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "유저 없음"));
+        User user = userService.findById(joinEventRequest.getUserId());
 
         event.application(user); // 실제 참여 추가
         event.setParticipants(event.getParticipants() + 1);

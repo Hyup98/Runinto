@@ -1,19 +1,15 @@
 package com.runinto.user.domain;
 
-import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
-import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
 @Setter
 @Getter
-@ToString(exclude = "eventParticipants")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")

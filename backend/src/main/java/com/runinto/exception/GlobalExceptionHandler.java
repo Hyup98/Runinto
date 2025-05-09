@@ -1,5 +1,6 @@
 package com.runinto.exception;
 
+import com.runinto.exception.user.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,11 +15,9 @@ public class GlobalExceptionHandler {
     // 유효성 검사 실패 처리
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
-        // 유효성 검사 실패 상세 정보를 추출하여 응답에 포함시키는 것이 일반적입니다.
-        // 여기서는 단순화하여 메시지만 사용합니다.
         String errorMessage = ex.getConstraintViolations().stream()
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
-                .findFirst() // 첫 번째 위반만 가져오거나, 모두 가져와 리스트로 반환 가능
+                .findFirst()
                 .orElse("Validation failed");
 
         return ResponseEntity
@@ -26,7 +25,8 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.BAD_REQUEST, errorMessage));
     }
 
-    // 새로 추가할 UserNameAlreadyExistsException 핸들러 (이름 중복 처리)
+
+    //region User
     @ExceptionHandler(UserNameAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserNameAlreadyExists(UserNameAlreadyExistsException ex) {
         log.warn("Attempted registration with existing username: {}", ex.getMessage());
@@ -35,7 +35,6 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.CONFLICT, ex.getMessage()));
     }
 
-    // 새로 추가할 UserEmailAlreadyExistsException 핸들러 (이메일 중복 처리)
     @ExceptionHandler(UserEmailAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserEmailAlreadyExists(UserEmailAlreadyExistsException ex) {
         log.warn("Attempted registration with existing email: {}", ex.getMessage());
@@ -43,5 +42,30 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT) // 409 Conflict
                 .body(ErrorResponse.of(HttpStatus.CONFLICT, ex.getMessage()));
     }
+
+    @ExceptionHandler(UserEmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUserIdNotFoundException(UserIdNotFoundException ex) {
+        log.warn("User ID not found: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserEmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
+        log.warn("User not found: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserEmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPasswordException(InvalidPasswordException ex) {
+        log.warn("User not found: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
+    }
+    //endregion
 
 }

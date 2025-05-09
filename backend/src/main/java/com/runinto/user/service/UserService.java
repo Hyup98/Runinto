@@ -1,14 +1,11 @@
 package com.runinto.user.service;
 
 import com.runinto.event.domain.Event;
-import com.runinto.exception.UserEmailAlreadyExistsException;
-import com.runinto.exception.UserNameAlreadyExistsException;
+import com.runinto.exception.user.*;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
 import com.runinto.user.domain.repository.UserRepositoryImple;
 import com.runinto.user.dto.response.EventResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,19 +20,20 @@ public class UserService {
         this.userH2Repository = userH2Repository;
     }
 
-    public Optional<User> getUser(final Long userId) {
-        return userH2Repository.findById(userId);
-    }
-
-    public Optional<User> findByEmail(final String email) {
-        return userH2Repository.findByEmail(email);
+    public User findById(final Long userId) {
+        return userH2Repository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException("User id not found: " + userId + " ."));
     }
 
     public void saveUser(final User user) {
         userH2Repository.save(user);
     }
 
+    //굳이 유효한 유저 아이디인지 검사해야할까? -> db에서 찾는 연산을 해야함
     public List<EventResponse> getJoinedEvents(Long userId) {
+        if (!userH2Repository.existsByUserId(userId)) {
+            throw new UserIdNotFoundException("User id not found: " + userId + " .");
+        }
         List<Event> joinedEvents = userH2Repository.findJoinedEvents(userId);
         return joinedEvents.stream()
                 .map(EventResponse::from)
@@ -58,5 +56,25 @@ public class UserService {
 
     public boolean existsByEmail(String email) {
         return userH2Repository.existsByEmail(email);
+    }
+
+    public User authenticate(String email, String password) {
+        User user = userH2Repository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("해당 이메일의 유저가 존재하지 않습니다: " + email));
+
+        if (!user.getPassword().equals(password)) {
+            throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return user;
+    }
+
+    public void ensureUserNameAndEmailAreUnique(String name, String email) {
+        if (existsByName(name)) {
+            throw new UserNameAlreadyExistsException("이미 존재하는 이름입니다: " + name);
+        }
+        if (existsByEmail(email)) {
+            throw new UserEmailAlreadyExistsException("이미 존재하는 이메일입니다: " + email);
+        }
     }
 }

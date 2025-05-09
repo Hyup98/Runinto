@@ -11,7 +11,8 @@ public interface  UserRepositoryImple {
     public Optional<User> findByEmail(String email);
     public User save(User user);
     public void delete(Long id);
-    List<Event> findJoinedEvents(Long userId);
+    public List<Event> findJoinedEvents(Long userId);
     public boolean existsByName(String name);
     public boolean existsByEmail(String email);
+    public boolean existsByUserId(Long userId);
 }

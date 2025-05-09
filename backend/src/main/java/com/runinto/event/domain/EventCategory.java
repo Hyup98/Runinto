@@ -5,7 +5,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@ToString(exclude = "event")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder

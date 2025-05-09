@@ -1,4 +1,4 @@
-package com.runinto.exception;
+package com.runinto.exception.user;
 
 public class UserEmailAlreadyExistsException extends RuntimeException {
     public UserEmailAlreadyExistsException(String message) {
