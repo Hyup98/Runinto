@@ -1,30 +1,5 @@
 package com.runinto.event.presentaion;
 
-import com.runinto.util.ErrorResponse;
-import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
-import com.runinto.event.domain.EventType;
-import com.runinto.event.dto.request.JoinEventRequest;
-import com.runinto.event.dto.request.UpdateEventRequest;
-import com.runinto.event.dto.response.EventListResponse;
-import com.runinto.event.dto.response.EventResponse;
-import com.runinto.event.service.EventService;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 //https://meetup.nhncloud.com/posts/223

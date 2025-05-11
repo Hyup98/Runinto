@@ -2,449 +2,51 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>RunInto 테스트</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f9f9f9;
-      padding: 20px;
-      color: #333;
-    }
-
-    h1 {
-      color: #4CAF50;
-      margin-bottom: 30px;
-    }
-
-    section {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      padding: 20px;
-      margin-bottom: 30px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    section h2 {
-      margin-top: 0;
-      color: #333;
-      border-left: 5px solid #4CAF50;
-      padding-left: 10px;
-    }
-
-    input, textarea, select, button {
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-      max-width: 500px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-sizing: border-box;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    ul.chatBox {
-      padding-left: 0;
-      list-style: none;
-    }
-
-    ul.chatBox li {
-      background: #e6f5e6;
-      margin-bottom: 5px;
-      padding: 8px 12px;
-      border-radius: 5px;
-    }
-  </style>
+  <title>회원가입 테스트</title>
 </head>
 <body>
+<h1>회원가입 (JSON + 이미지)</h1>
+<form id="registerForm" enctype="multipart/form-data" method="POST">
+  <label>프로필 JSON (아래 예시 복붙):</label><br>
+  <textarea name="profile" rows="10" cols="80">
+{
+  "name": "홍길동",
+  "email": "hong@example.com",
+  "password": "1234",
+  "description": "테스트 설명",
+  "gender": "MALE",
+  "age": 25,
+  "role": "USER"
+}
+    </textarea><br><br>
 
-<h1>✅ RunInto 테스트 페이지</h1>
+  <label>이미지 선택 (선택 사항):</label><br>
+  <input type="file" name="image"><br><br>
 
-<section>
-  <h2>1. 회원가입</h2>
-  <input id="userName" placeholder="이름">
-  <input id="userEmail" placeholder="이메일">
-  <input id="userPassword" placeholder="비밀번호">
-  <button onclick="registerUser()">회원가입</button>
-</section>
-
-<section>
-  <h2>2. 이벤트 생성</h2>
-  <input id="eventTitle" placeholder="이벤트 제목">
-  <textarea id="eventDescription" placeholder="이벤트 설명"></textarea>
-  <input id="latitude" placeholder="위도 (예: 37.5665)" type="number" step="any">
-  <input id="longitude" placeholder="경도 (예: 126.9780)" type="number" step="any">
-  <input id="maxParticipants" placeholder="최대 인원" type="number">
-  <button onclick="createCustomEvent()">이벤트 생성</button>
-</section>
-
-<section>
-  <h2>3. 이벤트 목록</h2>
-  <button onclick="loadEvents()">이벤트 목록 불러오기</button>
-  <ul id="eventList"></ul>
-</section>
-
-<section>
-  <h2>4. 채팅방 목록 및 채팅</h2>
-  <input id="eventIdForChatList" placeholder="이벤트 ID">
-  <button onclick="loadChatroom()">채팅방 불러오기</button>
-  <div id="chatroomContainer"></div>
-
-  <section>
-    <h2>📋 전체 채팅방 목록</h2>
-    <button onclick="loadAllChatrooms()">전체 채팅방 불러오기</button>
-    <div id="allChatroomsContainer"></div>
-  </section>
-  <input id="eventIdForChatList" placeholder="이벤트 ID">
-  <button onclick="loadChatroom()">채팅방 불러오기</button>
-  <div id="chatroomContainer"></div>
-
-  <section>
-    <h2>📋 전체 채팅방 목록</h2>
-    <button onclick="loadAllChatrooms()">전체 채팅방 불러오기</button>
-    <div id="allChatroomsContainer"></div>
-  </section>
-</section>
+  <button type="submit">회원가입 요청</button>
+</form>
 
 <script>
-  const BASE_URL = "http://localhost:8080";
+  document.getElementById('registerForm').onsubmit = async function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData();
 
-  function registerUser() {
-    const user = {
-      name: document.getElementById("userName").value,
-      email: document.getElementById("userEmail").value,
-      password: document.getElementById("userPassword").value,
-      imgUrl: "https://example.com/img.jpg",
-      description: "테스트 가입자입니다",
-      gender: "MALE",
-      age: 20
-    };
+    const profileText = form.profile.value;
+    formData.append("profile", new Blob([profileText], { type: "application/json" }));
 
-    fetch(`${BASE_URL}/users/register`, {
+    const imageFile = form.image.files[0];
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    const response = await fetch("/users/register", {
       method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(user)
-    })
-            .then(res => res.ok ? res.json() : Promise.reject("회원가입 실패"))
-            .then(data => alert("회원가입 성공! ID: " + data.userId))
-            .catch(err => alert(err));
-  }
-
-  function createCustomEvent() {
-    const event = {
-      title: document.getElementById("eventTitle").value,
-      description: document.getElementById("eventDescription").value,
-      latitude: parseFloat(document.getElementById("latitude").value),
-      longitude: parseFloat(document.getElementById("longitude").value),
-      maxParticipants: parseInt(document.getElementById("maxParticipants").value),
-      isPublic: true
-    };
-
-    fetch(`${BASE_URL}/events`, {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(event)
-    })
-            .then(res => res.ok ? res.json() : Promise.reject("이벤트 생성 실패"))
-            .then(data => {
-              alert(`✅ 이벤트 생성 완료\n이벤트 ID: ${data.eventId}\n채팅방 ID: ${data.chatroomId || "없음"}`);
-              document.getElementById("eventIdForChatList").value = data.eventId;
-              loadEvents();
-            })
-            .catch(err => alert(err));
-  }
-
-  function loadEvents() {
-    fetch(`${BASE_URL}/events?swLat=37.4&neLat=37.7&swLng=126.8&neLng=127.2`)
-            .then(res => res.json())
-            .then(data => {
-              const ul = document.getElementById("eventList");
-              ul.innerHTML = "";
-
-              if (data.events && data.events.length > 0) {
-                data.events.forEach(event => {
-                  ul.innerHTML += `<li>🟢 ${event.title} (ID: ${event.eventId}) - 참가자: ${event.participants}/${event.maxParticipants}</li>`;
-                });
-              } else {
-                ul.innerHTML = "<li>이벤트가 없습니다.</li>";
-              }
-            })
-            .catch(err => {
-              console.error("이벤트 로딩 오류:", err);
-              document.getElementById("eventList").innerHTML = "<li>이벤트 로딩 중 오류가 발생했습니다.</li>";
-            });
-  }
-
-  function loadChatroomId(eventId, callback) {
-    fetch(`${BASE_URL}/events/${eventId}/chatroom`)
-            .then(res => res.json())
-            .then(data => callback(data.chatroomId))
-            .catch(err => alert("채팅방 로딩 실패: " + err));
-  }
-
-  function loadChatroom() {
-    const eventId = document.getElementById("eventIdForChatList").value;
-
-    loadChatroomId(eventId, (chatroomId) => {
-      const chatroomDivId = `chatroom-${chatroomId}`;
-      if (document.getElementById(chatroomDivId)) {
-        alert("이미 열려있는 채팅방입니다.");
-        return;
-      }
-
-      const container = document.getElementById("chatroomContainer");
-      const chatDiv = document.createElement("div");
-      chatDiv.id = chatroomDivId;
-      chatDiv.style.marginTop = "20px";
-      chatDiv.style.padding = "10px";
-      chatDiv.style.border = "1px solid #ccc";
-      chatDiv.style.borderRadius = "8px";
-      chatDiv.style.backgroundColor = "#f5f5f5";
-
-      chatDiv.innerHTML = `
-        <h3>💬 채팅방 ID: ${chatroomId} (이벤트 ID: ${eventId})</h3>
-        <ul id="chatMessages-${chatroomId}" class="chatBox"></ul>
-        <input id="input-userId-${chatroomId}" placeholder="유저 ID">
-        <input id="input-message-${chatroomId}" placeholder="메시지 입력">
-        <button onclick="sendChatToRoom(${eventId}, ${chatroomId})">전송</button>
-      `;
-
-      container.appendChild(chatDiv);
-
-      fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`)
-              .then(res => res.json())
-              .then(messages => {
-                const ul = document.getElementById(`chatMessages-${chatroomId}`);
-                ul.innerHTML = "";
-                messages.forEach(msg => {
-                  const li = document.createElement("li");
-                  li.innerText = `[${msg.senderId}] ${msg.message}`;
-                  ul.appendChild(li);
-                });
-              });
+      body: formData
     });
-  }
 
-  function sendChatToRoom(eventId, chatroomId) {
-    const userId = document.getElementById(`input-userId-${chatroomId}`).value;
-    const message = document.getElementById(`input-message-${chatroomId}`).value;
-
-    const payload = {
-      senderId: userId,
-      message: message
-    };
-
-    fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`, {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(() => {
-      return fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`);
-    }).then(res => res.json())
-            .then(messages => {
-              const ul = document.getElementById(`chatMessages-${chatroomId}`);
-              ul.innerHTML = "";
-              messages.forEach(msg => {
-                const li = document.createElement("li");
-                li.innerText = `[${msg.senderId}] ${msg.message}`;
-                ul.appendChild(li);
-              });
-            });
-  }
-
-  function loadAllChatrooms() {
-    fetch(`${BASE_URL}/chatrooms`)
-            .then(res => res.json())
-            .then(data => {
-              const container = document.getElementById("allChatroomsContainer");
-              container.innerHTML = "";
-
-              const chatrooms = data || [];
-              chatrooms.forEach(chatroom => {
-                const chatroomId = chatroom.chatroomId;
-                const eventId = chatroom.eventId;
-                const chatDivId = `chatroom-${chatroomId}`;
-
-                if (document.getElementById(chatDivId)) return;
-
-                const chatDiv = document.createElement("div");
-                chatDiv.id = chatDivId;
-                chatDiv.style.marginTop = "20px";
-                chatDiv.style.padding = "10px";
-                chatDiv.style.border = "1px solid #ccc";
-                chatDiv.style.borderRadius = "8px";
-                chatDiv.style.backgroundColor = "#f5f5f5";
-
-                chatDiv.innerHTML = `
-            <h3>💬 채팅방 ID: ${chatroomId} (이벤트 ID: ${eventId})</h3>
-            <ul id="chatMessages-${chatroomId}" class="chatBox"></ul>
-            <input id="input-userId-${chatroomId}" placeholder="유저 ID">
-            <input id="input-message-${chatroomId}" placeholder="메시지 입력">
-            <button onclick="sendChatToRoom(${eventId}, ${chatroomId})">전송</button>
-          `;
-
-                container.appendChild(chatDiv);
-
-                fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`)
-                        .then(res => res.json())
-                        .then(messages => {
-                          const ul = document.getElementById(`chatMessages-${chatroomId}`);
-                          ul.innerHTML = "";
-                          messages.forEach(msg => {
-                            const li = document.createElement("li");
-                            li.innerText = `[${msg.senderId}] ${msg.message}`;
-                            ul.appendChild(li);
-                          });
-                        });
-              });
-            })
-            .catch(err => {
-              console.error("전체 채팅방 목록 불러오기 실패:", err);
-            });
-  }
-</script>
-
-
-<script>
-  function loadChatroomId(eventId, callback) {
-    fetch(`${BASE_URL}/events/${eventId}/chatroom`)
-            .then(res => res.json())
-            .then(data => callback(data.chatroomId))
-            .catch(err => alert("채팅방 로딩 실패: " + err));
-  }
-
-  function loadChatroom() {
-    const eventId = document.getElementById("eventIdForChatList").value;
-    if (!eventId) return alert("이벤트 ID를 입력하세요.");
-
-    loadChatroomId(eventId, (chatroomId) => {
-      const chatroomDivId = `chatroom-${chatroomId}`;
-      if (document.getElementById(chatroomDivId)) {
-        alert("이미 열려있는 채팅방입니다.");
-        return;
-      }
-
-      const container = document.getElementById("chatroomContainer");
-      const chatDiv = document.createElement("div");
-      chatDiv.id = chatroomDivId;
-      chatDiv.style.marginTop = "20px";
-      chatDiv.style.padding = "10px";
-      chatDiv.style.border = "1px solid #ccc";
-      chatDiv.style.borderRadius = "8px";
-      chatDiv.style.backgroundColor = "#f5f5f5";
-
-      chatDiv.innerHTML = `
-        <h3>💬 채팅방 ID: ${chatroomId} (이벤트 ID: ${eventId})</h3>
-        <ul id="chatMessages-${chatroomId}" class="chatBox"></ul>
-        <input id="input-userId-${chatroomId}" placeholder="유저 ID">
-        <input id="input-message-${chatroomId}" placeholder="메시지 입력">
-        <button onclick="sendChatToRoom(${eventId}, ${chatroomId})">전송</button>
-      `;
-
-      container.appendChild(chatDiv);
-
-      fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`)
-              .then(res => res.json())
-              .then(messages => {
-                const ul = document.getElementById(`chatMessages-${chatroomId}`);
-                ul.innerHTML = "";
-                messages.forEach(msg => {
-                  const li = document.createElement("li");
-                  li.innerText = `[${msg.senderId}] ${msg.message}`;
-                  ul.appendChild(li);
-                });
-              });
-    });
-  }
-
-  function sendChatToRoom(eventId, chatroomId) {
-    const userId = document.getElementById(`input-userId-${chatroomId}`).value;
-    const message = document.getElementById(`input-message-${chatroomId}`).value;
-
-    const payload = {
-      senderId: userId,
-      message: message
-    };
-
-    fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`, {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(() => {
-      return fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`);
-    }).then(res => res.json())
-            .then(messages => {
-              const ul = document.getElementById(`chatMessages-${chatroomId}`);
-              ul.innerHTML = "";
-              messages.forEach(msg => {
-                const li = document.createElement("li");
-                li.innerText = `[${msg.senderId}] ${msg.message}`;
-                ul.appendChild(li);
-              });
-            });
-  }
-
-  function loadAllChatrooms() {
-    fetch(`${BASE_URL}/chatrooms`)
-            .then(res => res.json())
-            .then(data => {
-              const container = document.getElementById("allChatroomsContainer");
-              container.innerHTML = "";
-
-              const chatrooms = data || [];
-              chatrooms.forEach(chatroom => {
-                const chatroomId = chatroom.chatroomId;
-                const eventId = chatroom.eventId;
-                const chatDivId = `chatroom-${chatroomId}`;
-
-                if (document.getElementById(chatDivId)) return;
-
-                const chatDiv = document.createElement("div");
-                chatDiv.id = chatDivId;
-                chatDiv.style.marginTop = "20px";
-                chatDiv.style.padding = "10px";
-                chatDiv.style.border = "1px solid #ccc";
-                chatDiv.style.borderRadius = "8px";
-                chatDiv.style.backgroundColor = "#f5f5f5";
-
-                chatDiv.innerHTML = `
-            <h3>💬 채팅방 ID: ${chatroomId} (이벤트 ID: ${eventId})</h3>
-            <ul id="chatMessages-${chatroomId}" class="chatBox"></ul>
-            <input id="input-userId-${chatroomId}" placeholder="유저 ID">
-            <input id="input-message-${chatroomId}" placeholder="메시지 입력">
-            <button onclick="sendChatToRoom(${eventId}, ${chatroomId})">전송</button>
-          `;
-
-                container.appendChild(chatDiv);
-
-                fetch(`${BASE_URL}/events/${eventId}/chatroom/messages`)
-                        .then(res => res.json())
-                        .then(messages => {
-                          const ul = document.getElementById(`chatMessages-${chatroomId}`);
-                          ul.innerHTML = "";
-                          messages.forEach(msg => {
-                            const li = document.createElement("li");
-                            li.innerText = `[${msg.senderId}] ${msg.message}`;
-                            ul.appendChild(li);
-                          });
-                        });
-              });
-            })
-            .catch(err => {
-              console.error("전체 채팅방 목록 불러오기 실패:", err);
-            });
+    const result = await response.text();
+    alert("서버 응답:\n" + result);
   }
 </script>
 </body>

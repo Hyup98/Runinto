@@ -7,15 +7,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/*todo
+지금은 패스워드를 직렬화로 보내지만 암호화하는 방향 고려
+ */
 @Getter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 public class RegisterRequest {
     private String name;
     private String email;
     private String password;
-    private String imgUrl;
     private String description;
     private Gender gender;
     private Integer age;

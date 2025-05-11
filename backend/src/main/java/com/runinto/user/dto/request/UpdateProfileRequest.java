@@ -13,7 +13,6 @@ public class UpdateProfileRequest {
     private String name;
     private Integer age;
     private String description;
-    private String imgUrl;
     private Gender gender;
 
 }

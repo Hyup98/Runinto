@@ -17,7 +17,6 @@ import java.util.Set;
 
 @Getter
 @Setter
-@ToString(exclude = {"chatroom", "eventParticipants", "eventCategories"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "event")

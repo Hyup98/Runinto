@@ -25,3 +25,6 @@ spring:
     static-path-pattern: /**
 server:
   port: 8080
+
+user:
+  default-profile: /images/default_profile.png

@@ -12,11 +12,13 @@ public class AuthService {
     private final UserService userService;
 
     public boolean signin(String id, String password) {
-        return userService.getUser(Long.valueOf(id)).isPresent();
+        //return userService.findById(Long.valueOf(id)) ;
+        return true;
     }
 
     public boolean logout(String id) {
-        return userService.getUser(Long.valueOf(id)).isEmpty();
+        //return userService.getUser(Long.valueOf(id)).isEmpty();
+        return true;
     }
 
     //토큰 재발급

@@ -26,7 +26,6 @@ public class ChatroomParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 예: 참여 시간, 역할 등 추가 가능
     @Column(name = "joined_at")
     private java.time.LocalDateTime joinedAt;
 }

@@ -18,28 +18,29 @@ public class UserH2Repository implements UserRepositoryImple {
 
     private final UserJpaRepository userJpaRepository;
 
+
     @Override
     public Optional<User> findById(Long id) {
-        log.info("Find User by id: {}", id);
         return userJpaRepository.findById(id);
+        //return userJpaRepository.findWithAssociationsById(id);
     }
 
     @Override
-    public void save(User user) {
-        userJpaRepository.save(user);
-        log.info("Saved user: {}", user);
+    public User save(User user) {
+        return userJpaRepository.save(user);
     }
 
     @Override
     public void delete(Long id) {
         userJpaRepository.deleteById(id);
-        log.info("Deleted user with id: {}", id);
     }
 
+    //우선 jpa n+1문제 해결을 위해 수정
+    //객체가 연관된 엔티티를 불러올때
     @Override
     public Optional<User> findByEmail(String email) {
-        log.info("Find User by email: {}", email);
-        return userJpaRepository.findByEmail(email);
+        //return userJpaRepository.findByEmail(email);
+        return userJpaRepository.findWithAssociationsByEmail(email);
     }
 
     public List<Event> findJoinedEvents(Long userId) {
@@ -49,4 +50,20 @@ public class UserH2Repository implements UserRepositoryImple {
     public void deleteAll() {
         userJpaRepository.deleteAll();
     }
+
+    @Override
+    public boolean existsByName(String name) {
+        return userJpaRepository.existsByName(name);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userJpaRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUserId(Long userId) {
+        return userJpaRepository.existsByUserId(userId);
+    }
+
 }
