@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.CONFLICT, ex.getMessage()));
     }
 
-    @ExceptionHandler(UserEmailAlreadyExistsException.class)
+    @ExceptionHandler(UserIdNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserIdNotFoundException(UserIdNotFoundException ex) {
         log.warn("User ID not found: {}", ex.getMessage());
         return ResponseEntity
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
-    @ExceptionHandler(UserEmailAlreadyExistsException.class)
+    @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
         log.warn("User not found: {}", ex.getMessage());
         return ResponseEntity
@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
-    @ExceptionHandler(UserEmailAlreadyExistsException.class)
+    @ExceptionHandler(InvalidPasswordException.class)
     public ResponseEntity<ErrorResponse> handleInvalidPasswordException(InvalidPasswordException ex) {
         log.warn("User not found: {}", ex.getMessage());
         return ResponseEntity

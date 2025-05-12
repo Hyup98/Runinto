@@ -50,10 +50,11 @@ public class User {
     private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<ChatroomParticipant> chatParticipations;
+    private Set<ChatroomParticipant> chatParticipations = new HashSet<>();
 
     @Builder
-    public User(String name, String email, String password, String imgUrl, String description, Gender gender, Integer age, Role role, Set<EventParticipant> eventParticipants) {
+    public User(Long userId, String name, String email, String password, String imgUrl, String description, Gender gender, Integer age, Role role, Set<EventParticipant> eventParticipants, Set<ChatroomParticipant> chatParticipations)  {
+        this.userId = userId;
         this.name = name;
         this.imgUrl = imgUrl;
         this.description = description;
@@ -62,7 +63,8 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
-        this.eventParticipants = eventParticipants;
+        this.eventParticipants = eventParticipants != null ? eventParticipants : new HashSet<>();;
+        this.chatParticipations = chatParticipations != null ? chatParticipations : new HashSet<>();;
     }
 
     @Override

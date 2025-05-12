@@ -4,5 +4,6 @@ public enum EventType {
     EAT,
     ACTIVITY,
     TALKING,
-    MOVIE
+    MOVIE,
+    MUSIC
 }

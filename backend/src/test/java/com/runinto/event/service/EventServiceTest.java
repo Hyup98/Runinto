@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 
+/*
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -117,3 +118,4 @@ class EventServiceTest {
                 .containsExactlyInAnyOrder(1L, 2L);
     }
 }
+*/

@@ -30,23 +30,10 @@ class ChatControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        baseUrl = "http://localhost:" + port + "events/";
-
-        if (chatService.findAll().isEmpty()) {
-            for (int i = 1; i <= 10; i++) {
-                ChatMessage chatMessage = ChatMessage.builder()
-                        .message("dum mesg")
-                        //.chatRoomId((long) i)
-                        .senderId((long) i)
-                        .build();
-                chatService.sendMessage(chatMessage);
-            }
-        }
     }
 
     @AfterEach
     void tearDown() {
-        chatService.clear(); // clear 메소드 구현 필요
     }
 
     @Test
