@@ -8,10 +8,10 @@ import java.util.*;
 
 public interface EventRepositoryImple {
     Optional<Event> findById(long id);
-    void save(Event event);
+    Event save(Event event);
     List<Event> findAll();
     List<Event> findByCategory(Set<EventType> categorys);
     List<Event> findByArea(double nelatitude, double nelongitude, double swlatitude, double swlongitude);
-    boolean delete(long id);
+    boolean delete(Event event);
     void clear();
 }

@@ -2,16 +2,22 @@ package com.runinto.event.service;
 
 import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.event.domain.Event;
+import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.EventType;
+import com.runinto.event.domain.ParticipationStatus;
 import com.runinto.event.domain.repository.EventH2Repository;
 import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.event.dto.request.FindEventRequest;
+import com.runinto.exception.user.UserIdNotFoundException;
+import com.runinto.user.domain.User;
+import com.runinto.user.domain.repository.UserH2Repository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,10 +27,12 @@ import java.util.Optional;
 @Service
 public class EventService {
 
+    private final UserH2Repository userH2Repository;
     private final EventRepositoryImple eventRepository;
 
-    public EventService(final EventH2Repository eventRepository) {
+    public EventService(final EventH2Repository eventRepository,  final UserH2Repository userH2Repository) {
         this.eventRepository = eventRepository;
+        this.userH2Repository = userH2Repository;
     }
 
     public Optional<Event> findById(long id) {
@@ -64,25 +72,46 @@ public class EventService {
                 .toList();
     }
 
+    /*
+    이벤트와 채팅방은 1:1 관계 이벤트에 채팅방이 종속관계이므로 채팅방 관리는 이벤트의 생명주기를 따르고 관리함
+     */
     @Transactional
-    public Event createEventWithChatroom(Event event) {
-        if (event.getChatroom() == null) {
-            Chatroom chatroom = Chatroom.builder()
-                    .event(event)
-                    .messages(new ArrayList<>())
-                    .participants(new HashSet<>())
-                    .build();
-            event.setChatroom(chatroom);
+    public Event createEventWithChatroom(Event event, User user) {
+
+        if(!userH2Repository.existsByUserId(user.getUserId())) {
+            throw new UserIdNotFoundException("User id not found: " + user.getUserId() + " .");
         }
 
-        eventRepository.save(event);
-        return event;
+        // 이벤트 저장
+        Event savedEvent = eventRepository.save(event);
+
+        // 이벤트 생성자가 방장으로 자동 등록
+        EventParticipant eventParticipant = EventParticipant.builder()
+                .event(savedEvent)
+                .user(user)
+                .status(ParticipationStatus.MANAGER)
+                .appliedAt(LocalDateTime.now())
+                .build();
+
+        savedEvent.getEventParticipants().add(eventParticipant);
+        user.getEventParticipants().add(eventParticipant);
+
+        // 3. 채팅방 생성 및 연결
+        Chatroom chatroom = Chatroom.builder()
+                .event(savedEvent)
+                .build();
+
+        savedEvent.setChatroom(chatroom);
+        return savedEvent;
     }
 
 
     @Transactional
-    public boolean delete(long id) {
-        return eventRepository.delete(id);
+    public boolean delete(long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+        eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
     }
 
     @Transactional
