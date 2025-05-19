@@ -1,42 +1,46 @@
 package com.runinto.event.service;
 
 import com.runinto.chat.domain.repository.chatroom.Chatroom;
+import com.runinto.chat.domain.repository.chatroom.ChatroomH2Repository;
+import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;
-import com.runinto.event.domain.EventType;
 import com.runinto.event.domain.ParticipationStatus;
 import com.runinto.event.domain.repository.EventH2Repository;
 import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.event.dto.request.FindEventRequest;
+import com.runinto.exception.event.EventNotFoundException;
 import com.runinto.exception.user.UserIdNotFoundException;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class EventService {
 
     private final UserH2Repository userH2Repository;
-    private final EventRepositoryImple eventRepository;
+    private final EventH2Repository eventRepository;
+    private final ChatroomH2Repository chatroomH2Repository;
 
-    public EventService(final EventH2Repository eventRepository,  final UserH2Repository userH2Repository) {
+    public EventService(final EventH2Repository eventRepository, final UserH2Repository userH2Repository, ChatroomH2Repository chatroomH2Repository) {
         this.eventRepository = eventRepository;
         this.userH2Repository = userH2Repository;
+        this.chatroomH2Repository = chatroomH2Repository;
     }
 
-    public Optional<Event> findById(long id) {
-        return eventRepository.findById(id);
+    public Event findById(long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "이벤트를 찾을 수 없습니다."));
     }
 
     public List<Event> findAll() {
@@ -72,9 +76,7 @@ public class EventService {
                 .toList();
     }
 
-    /*
-    이벤트와 채팅방은 1:1 관계 이벤트에 채팅방이 종속관계이므로 채팅방 관리는 이벤트의 생명주기를 따르고 관리함
-     */
+    //이벤트와 채팅방은 1:1 관계 이벤트에 채팅방이 종속관계이므로 채팅방 관리는 이벤트의 생명주기를 따르고 관리함
     @Transactional
     public Event createEventWithChatroom(Event event, User user) {
 
@@ -105,15 +107,114 @@ public class EventService {
         return savedEvent;
     }
 
-
     @Transactional
     public boolean delete(long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found"));
 
-        eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
+        return eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
     }
 
     @Transactional
     public void clear() {eventRepository.clear();}
+
+    //채팅방 신청 유저 확인
+    public List<EventParticipant> getEventParticipants(long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+        return event.getEventParticipants().stream()
+                .filter(ep -> ep.getStatus() == ParticipationStatus.REQUESTED)
+                .collect(Collectors.toList());
+    }
+
+    //이벤트 참여 승인된 유저만 채팅 참여db에 저장
+    @Transactional
+    public void approveParticipant(long eventId, long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found. ID = " + eventId));
+
+        EventParticipant participant = event.getEventParticipants().stream()
+                .filter(ep -> ep.getUser().getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new EventNotFoundException("EventParticipant not found for userId = " + userId));
+
+        if (participant.getStatus() == ParticipationStatus.APPROVED) {
+            throw new IllegalStateException("Participant is already approved.");
+        }
+
+        if (participant.getStatus() != ParticipationStatus.REQUESTED) {
+            throw new IllegalStateException("Only REQUESTED participants can be approved. Current status: " + participant.getStatus());
+        }
+
+        participant.setStatus(ParticipationStatus.APPROVED);
+
+        Chatroom chatroom = event.getChatroom();
+        if (chatroom == null) {
+            throw new IllegalStateException("No chatroom found for event " + eventId);
+        }
+
+        User user = participant.getUser();
+
+        ChatroomParticipant chatParticipant = ChatroomParticipant.builder()
+                .chatroom(chatroom)
+                .user(user)
+                .build();
+
+        chatroom.getParticipants().add(chatParticipant);
+        user.getChatParticipations().add(chatParticipant);
+    }
+
+    @Transactional
+    public void rejectParticipant(long eventId, long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found. ID = " + eventId));
+
+        EventParticipant participant = event.getEventParticipants().stream()
+                .filter(ep -> ep.getUser().getUserId().equals(userId))
+                .findFirst()
+                .orElseThrow(() -> new EventNotFoundException("EventParticipant not found for userId = " + userId));
+
+        if (participant.getStatus() == ParticipationStatus.REJECTED) {
+            throw new IllegalStateException("Participant is already rejected.");
+        }
+
+        if (participant.getStatus() != ParticipationStatus.REQUESTED) {
+            throw new IllegalStateException("Only REQUESTED participants can be approved. Current status: " + participant.getStatus());
+        }
+
+        participant.setStatus(ParticipationStatus.REJECTED);
+    }
+
+    @Transactional
+    public void appliyToEvent(long eventId, long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found. ID = " + eventId));
+
+        boolean alreadyExists = event.getEventParticipants().stream()
+                .anyMatch(ep -> ep.getUser().getUserId().equals(userId));
+
+        if (alreadyExists) {
+            throw new IllegalStateException("User already applied or is participating in this event.");
+        }
+
+        if (event.getChatroom().getParticipants().size() >= event.getMaxParticipants()) {
+            throw new IllegalStateException("이벤트가 다 찼습니다.");
+        }
+
+        User user = userH2Repository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException("User not found. ID = " + userId));
+
+
+        EventParticipant participant = EventParticipant.builder()
+                .event(event)
+                .user(user)
+                .status(ParticipationStatus.REQUESTED)
+                .appliedAt(LocalDateTime.now())
+                .build();
+
+        event.getEventParticipants().add(participant);
+        user.getEventParticipants().add(participant);
+    }
+
 }

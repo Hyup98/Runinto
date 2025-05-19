@@ -7,7 +7,7 @@ import com.runinto.event.domain.EventType;
 import java.util.*;
 
 public interface EventRepositoryImple {
-    Optional<Event> findById(long id);
+    Event findById(long id);
     Event save(Event event);
     List<Event> findAll();
     List<Event> findByCategory(Set<EventType> categorys);

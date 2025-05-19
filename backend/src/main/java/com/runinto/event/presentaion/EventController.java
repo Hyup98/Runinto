@@ -5,6 +5,7 @@ import com.runinto.chat.presntation.ChatController;
 import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
+import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.EventType;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.event.dto.request.JoinEventRequest;
@@ -13,6 +14,7 @@ import com.runinto.event.dto.response.EventListResponse;
 import com.runinto.event.dto.response.EventResponse;
 import com.runinto.event.service.EventService;
 import com.runinto.user.domain.User;
+import com.runinto.user.dto.response.EventParticipantsResponse;
 import com.runinto.user.service.UserService;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -28,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Validated
@@ -47,54 +50,28 @@ public class EventController {
 
     @GetMapping("{event_id}")
     public ResponseEntity<EventResponse> GetEventV1(@PathVariable("event_id") Long eventId) {
-        Event event = eventService.findById(eventId).orElseThrow();
+        Event event = eventService.findById(eventId);
         final EventResponse eventResponse = EventResponse.from(event);
         return ResponseEntity.ok(eventResponse);
     }
 
     //채팅방도 함께 생성해주는 이벤트 생성함수
     @PostMapping
-    public ResponseEntity<EventResponse> createEventV2(@RequestBody Event event) {
+    public ResponseEntity<EventResponse> createEventV2(
+            @RequestBody Event event,
+            @RequestParam User user) {
         log.info("Creating event: {}", event.getTitle());
 
-        Event saved = eventService.createEventWithChatroom(event);
+        Event saved = eventService.createEventWithChatroom(event, user);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(EventResponse.from(saved));
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<EventResponse> getTempEvent() {
-
-        Event testEvent = Event.builder()
-                .title("테스트 이벤트")
-                .description("이벤트 설명입니다.")
-                .maxParticipants(10)
-                .latitude(37.5665)
-                .longitude(126.9780)
-                //.chatroom(1L)
-                .participants(0)
-                .build();
-
-        EventCategory category = EventCategory.builder()
-                .category(EventType.MOVIE)
-                .build();
-
-        category.setEvent(testEvent);
-        // Set을 생성하여 카테고리를 추가
-        Set<EventCategory> categories = new HashSet<>();
-        categories.add(category);
-        testEvent.setEventCategories(categories); // Event 객체에 카테고리 설정
-
-        // 이벤트 저장 시 Event와 연관된 EventCategory도 함께 저장됩니다 (CascadeType.ALL 설정 시).
-        eventService.save(testEvent);
-        return ResponseEntity.ok(EventResponse.from(testEvent));
     }
 
     @PatchMapping("{event_id}")
     public ResponseEntity<EventResponse> UpdateEventV1(
             @PathVariable("event_id") Long eventId,
             @RequestBody UpdateEventRequest eventRequest) {
-        Event event = eventService.findById(eventId).orElse(null);
+        Event event = eventService.findById(eventId);
         if(event == null) {
             return ResponseEntity.notFound().build();
         }
@@ -150,7 +127,6 @@ public class EventController {
     /*이벤트 삭제 요청
     추가예정 기능
     1. 이벤트 관리자만 삭제 가능-> 권한
-    2. jwt확인 후 관리자인지 확인
      */
     @DeleteMapping("{event_id}")
     public ResponseEntity<String> DeleteEventV1(@PathVariable("event_id") Long eventId) {
@@ -161,33 +137,46 @@ public class EventController {
     }
 
     //이벤트 참여 요청 -> 채팅 서버를 따로 빼서 관리
-    //              -> 일단 무조건 채팅도 같이 참여되게 설정 -> 종속관계
     @PostMapping("{event_id}/participants")
     public ResponseEntity<String> AddParticipantV1(
             @PathVariable("event_id") Long eventId,
             @RequestBody JoinEventRequest joinEventRequest) {
 
-        Event event = eventService.findById(eventId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "이벤트를 찾을 수 없습니다."));
+        eventService.appliyToEvent(eventId, joinEventRequest.getUserId());
 
-        log.info("event.getParticipants() : " + event.getParticipants() + ",  event.getMaxParticipants() : " + event.getMaxParticipants());
-
-        if (event.getParticipants() >= event.getMaxParticipants()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("참여 인원이 가득 찼습니다.");
-        }
-        User user = userService.findById(joinEventRequest.getUserId());
-
-        event.application(user); // 실제 참여 추가
-        event.setParticipants(event.getParticipants() + 1);
-        eventService.save(event); // 저장
-
-        Chatroom chatroom = chatService.getChatroomByEventId(eventId);
-        chatroom.addParticipant(user);
-        chatService.save(chatroom);
-
-        return ResponseEntity.ok("이벤트에 성공적으로 참여했습니다.");
+        return ResponseEntity.ok("Participant added.");
     }
+
+    @PostMapping("/{eventId}/participants/{userId}/approve")
+    public ResponseEntity<Void> approveParticipant(
+            @PathVariable Long eventId,
+            @PathVariable Long userId) {
+        eventService.approveParticipant(eventId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{eventId}/participants/{userId}/reject")
+    public ResponseEntity<Void> rejectParticipant(
+            @PathVariable Long eventId,
+            @PathVariable Long userId) {
+        eventService.rejectParticipant(eventId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{eventId}/participants/requested")
+    public ResponseEntity<List<EventParticipantsResponse>> getRequestedParticipants(
+            @PathVariable Long eventId) {
+
+        List<EventParticipant> requested = eventService.getEventParticipants(eventId);
+
+        List<EventParticipantsResponse> responses = requested.stream()
+                .map(EventParticipantsResponse::from)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
+
 
 
 }
