@@ -25,9 +25,8 @@ public class EventH2Repository implements EventRepositoryImple {
         return eventJpaRepository.findById(id);
     }
 
-    public void save(Event event) {
-        eventJpaRepository.save(event);
-        log.info("Saved event {}", event);
+    public Event save(Event event) {
+        return eventJpaRepository.save(event);
     }
 
     public List<Event> findAll() {
@@ -46,9 +45,9 @@ public class EventH2Repository implements EventRepositoryImple {
         return (int) eventJpaRepository.count();
     }
 
-    public boolean delete(long id) {
-        if (eventJpaRepository.existsById(id)) {
-            eventJpaRepository.deleteById(id);
+    public boolean delete(Event event) {
+        if (eventJpaRepository.existsById(event.getId())) {
+            eventJpaRepository.deleteById(event.getId());
             return true;
         }
         return false;

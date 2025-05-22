@@ -100,12 +100,12 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
     @Override // 웹소켓 통신 에러시
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         log.error("웹소켓 통신 오류 발생: sessionId={}, error={}", session.getId(), exception.getMessage(), exception);
-        // session.getAttributes().get("userId")
-        // String userId = (String) session.getAttributes().get("userId");
-        // if (userId != null) {
-        //     sessions.remove(Long.parseLong(userId));
-        //     log.info("오류 발생으로 세션 제거: userId={}", userId);
-        // }
+        session.getAttributes().get("userId");
+        String userId = (String) session.getAttributes().get("userId");
+        if (userId != null) {
+            sessions.remove(Long.parseLong(userId));
+            log.info("오류 발생으로 세션 제거: userId={}", userId);
+        }
         super.handleTransportError(session, exception);
     }
 
