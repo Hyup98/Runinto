@@ -1,7 +1,7 @@
 package com.runinto.config.filter;
 
 import com.runinto.auth.domain.SessionConst;
-import com.runinto.user.domain.User;
+import com.runinto.auth.domain.UserSessionDto;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +37,13 @@ public class SessionFilter implements Filter {
         HttpSession session = httpRequest.getSession(false);
         if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
             httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
+        Object sessionAttribute = session.getAttribute(SessionConst.LOGIN_MEMBER);
+        if (!(sessionAttribute instanceof UserSessionDto)) {
+            // 예상치 못한 타입이 세션에 저장된 경우의 오류 처리
+            httpResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid session attribute type");
             return;
         }
 

@@ -123,6 +123,7 @@ public class EventController {
     추가예정 기능
     1. 이벤트 관리자만 삭제 가능-> 권한
     2. jwt확인 후 관리자인지 확인
+    3. 실제로 지우는게 맞을까?
      */
     @DeleteMapping("{event_id}")
     public ResponseEntity<String> DeleteEventV1(@PathVariable("event_id") Long eventId) {
@@ -160,6 +161,4 @@ public class EventController {
 
         return ResponseEntity.ok("이벤트에 성공적으로 참여했습니다.");
     }
-
-
 }
