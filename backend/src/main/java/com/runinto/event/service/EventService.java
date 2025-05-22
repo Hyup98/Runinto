@@ -176,6 +176,12 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found. ID = " + eventId));
 
+        // 권한 확인: 요청자가 이벤트 방장인지 확인
+        User eventHost = event.getHost();
+        if (eventHost == null || !eventHost.getUserId().equals(userId)) {
+            throw new PermissionDeniedException("PermissionDeniedException");
+        }
+
         EventParticipant participant = event.getEventParticipants().stream()
                 .filter(ep -> ep.getUser().getUserId().equals(userId))
                 .findFirst()
