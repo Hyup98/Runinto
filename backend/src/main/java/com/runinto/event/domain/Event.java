@@ -59,8 +59,12 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<EventParticipant> eventParticipants = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "host_user_id", nullable = false) // 'user' 테이블의 PK를 참조하는 'host_user_id' 컬럼 생성
+    private User host;
+
     @Builder
-    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, int participants, Set<EventCategory> categories) {
+    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, int participants, Set<EventCategory> categories, User host /* 빌더에 host 추가 */) {
         this.title = title;
         this.id = id;
         this.description = description;
@@ -69,8 +73,9 @@ public class Event {
         this.latitude = latitude;
         this.longitude = longitude;
         this.chatroom = chatroom;
-        this.eventCategories =categories;
+        this.eventCategories = categories;
         this.participants = participants;
+        this.host = host; // host 초기화
     }
 
     public void application(User user) {
@@ -103,6 +108,13 @@ public class Event {
         if (this == o) return true;
         if (!(o instanceof Event event)) return false;
         return id != null && id.equals(event.getId());
+    }
+
+    public boolean isHost(User user) {
+        if (this.host == null || user == null) {
+            return false;
+        }
+        return this.host.getUserId().equals(user.getUserId()); // User 엔티티의 ID getter에 따라 실제 메서드명은 달라질 수 있음
     }
 
     @Override
