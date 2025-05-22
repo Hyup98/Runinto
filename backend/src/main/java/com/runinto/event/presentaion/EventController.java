@@ -62,34 +62,6 @@ public class EventController {
                 .body(EventResponse.from(saved));
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<EventResponse> getTempEvent() {
-
-        Event testEvent = Event.builder()
-                .title("테스트 이벤트")
-                .description("이벤트 설명입니다.")
-                .maxParticipants(10)
-                .latitude(37.5665)
-                .longitude(126.9780)
-                //.chatroom(1L)
-                .participants(0)
-                .build();
-
-        EventCategory category = EventCategory.builder()
-                .category(EventType.MOVIE)
-                .build();
-
-        category.setEvent(testEvent);
-        // Set을 생성하여 카테고리를 추가
-        Set<EventCategory> categories = new HashSet<>();
-        categories.add(category);
-        testEvent.setEventCategories(categories); // Event 객체에 카테고리 설정
-
-        // 이벤트 저장 시 Event와 연관된 EventCategory도 함께 저장됩니다 (CascadeType.ALL 설정 시).
-        eventService.save(testEvent);
-        return ResponseEntity.ok(EventResponse.from(testEvent));
-    }
-
     @PatchMapping("{event_id}")
     public ResponseEntity<EventResponse> UpdateEventV1(
             @PathVariable("event_id") Long eventId,

@@ -1,0 +1,49 @@
+package com.runinto.config.filter;
+
+import com.runinto.auth.domain.SessionConst;
+import com.runinto.user.domain.User;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.util.PatternMatchUtils;
+import java.io.IOException;
+
+@Component
+@Order(1)
+public class SessionFilter implements Filter {
+
+    private static final String[] whitelist = {
+            "/auth/signin", "/auth/signup"
+    };
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
+            throws IOException, ServletException {
+        
+        HttpServletRequest httpRequest = (HttpServletRequest) request;
+        String requestURI = httpRequest.getRequestURI();
+        HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+        //화이트리스트 체크
+        if (isWhitelistedPath(requestURI)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 세션 기반 인증 확인
+        HttpSession session = httpRequest.getSession(false);
+        if (session == null || session.getAttribute(SessionConst.LOGIN_MEMBER) == null) {
+            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication required");
+            return;
+        }
+
+        chain.doFilter(request, response);
+    }
+
+    private boolean isWhitelistedPath(String requestURI) {
+        return PatternMatchUtils.simpleMatch(whitelist, requestURI);
+    }
+}

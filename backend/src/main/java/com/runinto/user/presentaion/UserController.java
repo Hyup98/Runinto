@@ -1,5 +1,6 @@
 package com.runinto.user.presentaion;
 
+import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.dto.request.LoginRequest;
@@ -10,6 +11,7 @@ import com.runinto.user.dto.response.ProfileResponse;
 import com.runinto.user.dto.response.UserDetailResponse;
 import com.runinto.user.service.UserService;
 import com.runinto.util.ImageStorageService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -35,6 +37,24 @@ public class UserController {
     public UserController(UserService userService, ImageStorageService imageStorageService) {
         this.userService = userService;
         this.imageStorageService = imageStorageService;
+    }
+
+    @PostConstruct
+    public void init() {
+        if (!userService.existsByEmail("dummy@example.com")) {
+            User dummy = User.builder()
+                    .name("더미유저")
+                    .email("dummy@example.com")
+                    .password("1234") // 테스트용, 실사용 시 인코딩
+                    .imgUrl("/img/default.png")
+                    .description("테스트 유저입니다.")
+                    .gender(Gender.MALE)
+                    .age(25)
+                    .role(Role.USER)
+                    .build();
+
+            userService.registerUser(dummy);
+        }
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -92,15 +112,6 @@ public class UserController {
 
         ProfileResponse response = ProfileResponse.from(user);
         return ResponseEntity.ok(response);
-    }
-
-    //최초 로그인에서 최대한 많은 정보 가져오기
-    //참여중인 채팅방, 참여중인 이벤트, 유저 정보
-    //비밀번호 암호화및 평문화 추가해야함
-    @PostMapping("/login")
-    public ResponseEntity<UserDetailResponse> login(@RequestBody LoginRequest request) {
-        User user = userService.authenticate(request.getEmail(), request.getPassword());
-        return ResponseEntity.ok(UserDetailResponse.from(user));
     }
 
     @GetMapping("/profile/{user_id}")

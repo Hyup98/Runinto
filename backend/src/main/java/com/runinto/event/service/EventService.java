@@ -2,14 +2,11 @@ package com.runinto.event.service;
 
 import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventType;
 import com.runinto.event.domain.repository.EventH2Repository;
 import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.event.dto.request.FindEventRequest;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
