@@ -68,4 +68,8 @@ public class GlobalExceptionHandler {
     }
     //endregion
 
+    //region event
+
+    //endregion
+
 }
