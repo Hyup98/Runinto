@@ -1,4 +1,10 @@
 spring:
+  session:
+    store-type: redis  # Redis에 세션 저장
+    redis:
+      host: localhost
+      port: 6379
+
   jwt:
     secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb
   datasource:
@@ -25,6 +31,13 @@ spring:
     static-path-pattern: /**
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 1800  # 30 minutes in seconds (same as SessionConst.SESSION_TIMEOUT)
+      cookie:
+        http-only: true
+        secure: false  # Set to true in production with HTTPS
+        name: JSESSIONID
 
 user:
   default-profile: /images/default_profile.png

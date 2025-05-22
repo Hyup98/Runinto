@@ -1,27 +1,37 @@
 package com.runinto.auth.service;
 
+import com.runinto.auth.domain.UserSessionDto;
+import com.runinto.user.domain.User;
 import com.runinto.user.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Service;
+import com.runinto.auth.domain.SessionConst;
 
 @Service
-@RequiredArgsConstructor
 public class AuthService {
-    @Autowired
+
     private final UserService userService;
 
-    public boolean signin(String id, String password) {
-        //return userService.findById(Long.valueOf(id)) ;
-        return true;
+    public AuthService(UserService userService) {
+        this.userService = userService;
     }
 
-    public boolean logout(String id) {
-        //return userService.getUser(Long.valueOf(id)).isEmpty();
-        return true;
+    public User login(String email, String password, HttpServletRequest request) {
+        User user = userService.authenticate(email, password);
+
+        UserSessionDto sessionUser = UserSessionDto.fromUser(user);
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(SessionConst.LOGIN_MEMBER, sessionUser);
+
+        return user;
     }
 
-    //토큰 재발급
-
-    //소셜 로그인
+    public void logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+    }
 }

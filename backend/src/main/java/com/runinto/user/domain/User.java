@@ -4,6 +4,8 @@ import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.event.domain.EventParticipant;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -13,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

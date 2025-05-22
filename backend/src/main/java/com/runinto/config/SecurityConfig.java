@@ -79,7 +79,7 @@ public class SecurityConfig {
         return http.build();*/
 
         http
-                .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (개발용)
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 )
