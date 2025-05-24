@@ -57,44 +57,10 @@ public class UserController {
         }
     }
 
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> register(
-            @RequestPart("profile") RegisterRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
-
-        userService.ensureUserNameAndEmailAreUnique(request.getName(), request.getEmail());
-
-        // 2. 이미지 저장
-        String imgUrl = null;
-        if (imageFile != null && !imageFile.isEmpty()) {
-            imgUrl = imageStorageService.saveImage(imageFile);
-        }
-        else {
-            imgUrl = defaultProfilePath;
-        }
-
-        // 3. 유저 저장
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(request.getPassword())
-                .imgUrl(imgUrl)
-                .description(request.getDescription())
-                .gender(request.getGender())
-                .age(request.getAge())
-                .role(request.getRole() != null ? request.getRole() : Role.USER)
-                .build();
-
-        userService.registerUser(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ProfileResponse.from(user));
-    }
-
     @PatchMapping(value = "/profile/{user_id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProfileResponse> UpdateProfile(
             @PathVariable("user_id") Long userId,
-            @RequestBody UpdateProfileRequest request,
+            @RequestPart("profile") UpdateProfileRequest request,
             @RequestPart(value = "image", required = false) MultipartFile imageFile
     ) throws IOException {
         User user = userService.findById(userId);

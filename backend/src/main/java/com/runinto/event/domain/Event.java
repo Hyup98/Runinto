@@ -48,8 +48,6 @@ public class Event {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = true;
 
-    private int participants;
-
     @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Chatroom chatroom;
 
@@ -60,7 +58,7 @@ public class Event {
     private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @Builder
-    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, int participants, Set<EventCategory> categories) {
+    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, Set<EventParticipant> participants, Set<EventCategory> categories) {
         this.title = title;
         this.id = id;
         this.description = description;
@@ -70,7 +68,7 @@ public class Event {
         this.longitude = longitude;
         this.chatroom = chatroom;
         this.eventCategories =categories;
-        this.participants = participants;
+        this.eventParticipants = participants;
     }
 
     public void application(User user) {

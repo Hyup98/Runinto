@@ -1,10 +1,7 @@
 package com.runinto.event.presentaion;
 
-import com.runinto.chat.domain.repository.chatroom.Chatroom;
-import com.runinto.chat.presntation.ChatController;
 import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.EventType;
 import com.runinto.event.dto.request.FindEventRequest;
@@ -18,16 +15,12 @@ import com.runinto.user.dto.response.EventParticipantsResponse;
 import com.runinto.user.service.UserService;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,13 +32,13 @@ import java.util.stream.Collectors;
 public class EventController {
 
     private final EventService eventService;
-    private final UserService userService;
-    private final ChatService chatService;
+    /*private final UserService userService;
+    private final ChatService chatService;*/
 
     public EventController(final EventService eventService, final UserService userService, ChatService chatService) {
-        this.userService = userService;
+        //this.userService = userService;
         this.eventService = eventService;
-        this.chatService = chatService;
+        //this.chatService = chatService;
     }
 
     @GetMapping("{event_id}")
