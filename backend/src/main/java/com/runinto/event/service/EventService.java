@@ -62,26 +62,7 @@ public class EventService {
 
     //todo 지금 이건 모든 이벤트를 다 가져온 후 필터링을 거는 방식 -> db에서 가져올 때 sql로 필터링을 하는 방법으로 바꿔야 한다.
     public List<Event> findByDynamicCondition(FindEventRequest request) {
-        return eventRepository.findAll().stream()
-                .filter(event -> {
-                    if (request.getSwlatitude() != null && request.getSwlongitude() != null &&
-                            request.getNelatitude() != null && request.getNelongitude() != null) {
-                        return event.isInArea(
-                                request.getNelatitude(),
-                                request.getNelongitude(),
-                                request.getSwlatitude(),
-                                request.getSwlongitude()
-                        );
-                    }
-                    return true;
-                })
-                .filter(event -> {
-                    if (request.getCategories() != null && !request.getCategories().isEmpty()) {
-                        return event.hasMatchingCategory(request.getCategories());
-                    }
-                    return true;
-                })
-                .toList();
+        return eventRepository.findByDynamicCondition(request);
     }
 
     public Event createEventFromDto(CreateEventRequestDto requestDto) {

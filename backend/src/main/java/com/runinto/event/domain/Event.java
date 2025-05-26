@@ -45,9 +45,6 @@ public class Event {
     @Column(nullable = false)
     private double longitude;
 
-    @Column(nullable = false)
-    private User Manager;
-
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = true;
 

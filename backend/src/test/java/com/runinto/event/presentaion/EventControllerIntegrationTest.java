@@ -619,7 +619,7 @@ class EventControllerIntegrationTest {
     class UpdateEvent {
         @Test
         @Transactional // For DB checks accessing lazy collections of updatedInDb if any
-        @DisplayName("성공: 이벤트 매니저가 자신의 이벤트를 수정한다 (전체 및 부분 업데이트)")
+        @DisplayName("성공: 이벤트 매니저가 자신의 이벤트를 수정한다 (전체 및 부분 업데이트) -> 머지 되면 마저 하기")
         void success_updateEvent_byManager() {
             // Given
             // 이벤트 생성자가 매니저인지 확인
@@ -718,7 +718,7 @@ class EventControllerIntegrationTest {
         }
 
         @Test
-        @DisplayName("실패: 이벤트 매니저가 아닌 사용자가 이벤트 수정 시도")
+        @DisplayName("실패: 이벤트 매니저가 아닌 사용자가 이벤트 수정 시도 -> 이것도 나중에")
         void failure_updateEvent_notManager() {
             // Given
             UpdateEventRequest updateDto = new UpdateEventRequest(
@@ -903,25 +903,29 @@ class EventControllerIntegrationTest {
             return eventService.createEventWithChatroom(event, creator);
         }
 
+        // EventControllerIntegrationTest.java 내의 GetAllEvents 중첩 클래스
+
         @Test
-        @DisplayName("성공: 다양한 필터 조건으로 이벤트 조회")
+        @DisplayName("성공: 다양한 필터 조건으로 이벤트 조회 (isPublic 필터링 없음)") // 테스트명 변경 가능
         void success_getFilteredEvents_withVariousConditions() {
-            // Case 1: 위치 및 공개 ACTIVITY 카테고리 필터링
+            HttpEntity<String> entity = new HttpEntity<>(null, regularUser1Headers);
+
+            // Case 1: 위치 및 ACTIVITY 카테고리 필터링 (isPublic=true는 더 이상 필터링에 영향 없음)
             String url1 = String.format("%s?swLat=%.3f&neLat=%.3f&swLng=%.3f&neLng=%.3f&category=%s&isPublic=true",
                     baseEventUrl, 37.500, 37.503, 127.000, 127.003, EventType.ACTIVITY.name());
-            HttpEntity<String> entity = new HttpEntity<>(null, regularUser1Headers);
 
             ResponseEntity<EventListResponse> response1 = restTemplate.exchange(
                     url1, HttpMethod.GET, entity, EventListResponse.class);
 
             assertThat(response1.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response1.getBody()).isNotNull();
-            assertThat(response1.getBody().getEvents()).extracting(Event::getTitle)
-                    .containsExactlyInAnyOrder(mainTestEvent.getTitle(), eventActivityNear.getTitle());
-            assertThat(response1.getBody().getEvents()).extracting(Event::getTitle)
-                    .doesNotContain(eventTalkingNear.getTitle(), eventGameFar.getTitle(), eventPrivate.getTitle());
+            // 이제 eventPrivate (비공개, ACTIVITY, 위치 범위 내)도 포함되어야 함
+            assertThat(response1.getBody().getEvents()).extracting(EventResponse::getTitle)
+                    .containsExactlyInAnyOrder(mainTestEvent.getTitle(), eventActivityNear.getTitle(), eventPrivate.getTitle());
+            assertThat(response1.getBody().getEvents()).extracting(EventResponse::getTitle)
+                    .doesNotContain(eventTalkingNear.getTitle(), eventGameFar.getTitle());
 
-            // Case 2: 카테고리만으로 필터링
+            // Case 2: 카테고리만으로 필터링 (isPublic 필터링 없음)
             String url2 = String.format("%s?category=%s", baseEventUrl, EventType.TALKING.name());
 
             ResponseEntity<EventListResponse> response2 = restTemplate.exchange(
@@ -929,13 +933,17 @@ class EventControllerIntegrationTest {
 
             assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response2.getBody()).isNotNull();
-            assertThat(response2.getBody().getEvents()).extracting(Event::getTitle)
-                    .contains(eventTalkingNear.getTitle());
-            assertThat(response2.getBody().getEvents()).extracting(Event::getTitle)
-                    .doesNotContain(mainTestEvent.getTitle(), eventActivityNear.getTitle(), 
-                                   eventGameFar.getTitle(), eventPrivate.getTitle());
+            // eventTalkingNear (공개, TALKING)
+            // 만약 비공개 TALKING 이벤트가 있었다면 그것도 포함될 것임. 현재 데이터로는 eventTalkingNear만.
+            assertThat(response2.getBody().getEvents()).extracting(EventResponse::getTitle)
+                    .containsExactlyInAnyOrder(eventTalkingNear.getTitle());
+            assertThat(response2.getBody().getEvents()).extracting(EventResponse::getTitle)
+                    .doesNotContain(mainTestEvent.getTitle(), eventActivityNear.getTitle(),
+                            eventGameFar.getTitle(), eventPrivate.getTitle());
 
-            // Case 3: 위치만으로 필터링
+            // Case 3: 위치만으로 필터링 (isPublic 필터링 없음)
+            // 이것이 이전에 실패했던 케이스 ["비공개 이벤트"]가 예상치 못하게 포함되었던 상황입니다.
+            // 이제 isPublic 필터링을 안 하므로, "비공개 이벤트"가 포함되는 것이 정상입니다.
             String url3 = String.format("%s?swLat=%.3f&neLat=%.3f&swLng=%.3f&neLng=%.3f",
                     baseEventUrl, 37.500, 37.505, 127.000, 127.005);
 
@@ -944,22 +952,23 @@ class EventControllerIntegrationTest {
 
             assertThat(response3.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response3.getBody()).isNotNull();
-            assertThat(response3.getBody().getEvents()).extracting(Event::getTitle)
-                    .contains(mainTestEvent.getTitle(), eventActivityNear.getTitle(), eventTalkingNear.getTitle());
-            assertThat(response3.getBody().getEvents()).extracting(Event::getTitle)
+            // mainTestEvent, eventActivityNear, eventTalkingNear (공개, 위치 범위 내)
+            // eventPrivate (비공개, 위치 범위 내)도 이제 포함되어야 함.
+            assertThat(response3.getBody().getEvents()).extracting(EventResponse::getTitle)
+                    .containsExactlyInAnyOrder(mainTestEvent.getTitle(), eventActivityNear.getTitle(), eventTalkingNear.getTitle(), eventPrivate.getTitle());
+            assertThat(response3.getBody().getEvents()).extracting(EventResponse::getTitle)
                     .doesNotContain(eventGameFar.getTitle());
 
-            // Case 4: 필터 없이 모든 공개 이벤트 조회
+            // Case 4: 필터 없이 모든 이벤트 조회 (isPublic 필터링 없음)
             ResponseEntity<EventListResponse> response4 = restTemplate.exchange(
                     baseEventUrl, HttpMethod.GET, entity, EventListResponse.class);
 
             assertThat(response4.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response4.getBody()).isNotNull();
-            assertThat(response4.getBody().getEvents()).extracting(Event::getTitle)
-                    .contains(mainTestEvent.getTitle(), eventActivityNear.getTitle(), 
-                             eventTalkingNear.getTitle(), eventGameFar.getTitle());
-            assertThat(response4.getBody().getEvents()).extracting(Event::getTitle)
-                    .doesNotContain(eventPrivate.getTitle());
+            // 모든 이벤트 (mainTestEvent, eventActivityNear, eventTalkingNear, eventGameFar, eventPrivate)가 포함되어야 함
+            assertThat(response4.getBody().getEvents()).extracting(EventResponse::getTitle)
+                    .containsExactlyInAnyOrder(mainTestEvent.getTitle(), eventActivityNear.getTitle(),
+                            eventTalkingNear.getTitle(), eventGameFar.getTitle(), eventPrivate.getTitle());
         }
 
         @Test
