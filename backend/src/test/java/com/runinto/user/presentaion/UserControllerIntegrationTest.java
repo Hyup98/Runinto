@@ -88,14 +88,11 @@ class UserControllerIntegrationTest {
             if (cookies != null && !cookies.isEmpty()) {
                 headers.add(HttpHeaders.COOKIE, cookies.get(0).split(";", 2)[0]);
             }
-            // 실제 UserSessionDto가 세션에 저장되었는지 확인하는 로직 (예: /auth/me)이 있다면 더 좋습니다.
-            // 이 테스트에서는 UserSessionDto의 구체적인 내용보다는 세션 존재 유무가 중요합니다.
             // SessionFilter가 UserSessionDto 타입을 검사하므로, 로그인 시 해당 타입으로 저장되어야 합니다.
             // 예시: session.setAttribute(SessionConst.LOGIN_MEMBER, new UserSessionDto(user.getUserId(), user.getRole()));
             return headers;
         }
         System.err.println("WARN: Authentication failed in setUp for user " + email + ". Subsequent tests might fail due to 401.");
-        // 테스트 실패를 유도하기 위해 예외를 던지거나 Assertions.fail()을 사용할 수 있습니다.
         // throw new IllegalStateException("Authentication failed in test setup for user: " + email);
         return new HttpHeaders(); // 로그인 실패 시 테스트가 401을 받도록 빈 헤더 반환 (또는 예외 처리)
     }

@@ -1,18 +1,21 @@
 package com.runinto.event.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
-import com.runinto.event.domain.EventType;
+import com.runinto.event.dto.EventCategoryInfoForResponseDto;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class EventResponse {
     private Long eventId;
     private String title;
@@ -22,9 +25,10 @@ public class EventResponse {
     private double latitude;
     private double longitude;
     private Long chatroomId;
+
     private boolean isPublic;
     private int participants;
-    private Set<EventCategory> eventCategories;
+    private Set<EventCategoryInfoForResponseDto> eventCategories;
 
     public EventResponse(Long eventId, String description, Long chatroomId, String title, int participants, int maxParticipants, Time creationTime, double latitude, double longitude, boolean aPublic, Set<EventCategory> eventCategories) {
         this.eventId = eventId;
@@ -37,7 +41,10 @@ public class EventResponse {
         this.latitude = latitude;
         this.longitude = longitude;
         this.isPublic = aPublic;
-        this.eventCategories = eventCategories;
+        this.eventCategories = eventCategories.stream()
+                .map(EventCategoryInfoForResponseDto::from) // 각 EventCategory를 DTO로 변환
+                .collect(Collectors.toSet());
+
     }
 
     public static EventResponse from(final Event event) {

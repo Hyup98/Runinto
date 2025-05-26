@@ -45,16 +45,19 @@ public class Event {
     @Column(nullable = false)
     private double longitude;
 
+    @Column(nullable = false)
+    private User Manager;
+
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = true;
 
     @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Chatroom chatroom;
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<EventCategory> eventCategories = new HashSet<>();
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @Builder

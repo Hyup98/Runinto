@@ -4,6 +4,7 @@ import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.EventType;
+import com.runinto.event.dto.request.CreateEventRequestDto;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.event.dto.request.JoinEventRequest;
 import com.runinto.event.dto.request.UpdateEventRequest;
@@ -32,13 +33,13 @@ import java.util.stream.Collectors;
 public class EventController {
 
     private final EventService eventService;
-    /*private final UserService userService;
-    private final ChatService chatService;*/
+    private final UserService userService;
+    private final ChatService chatService;
 
     public EventController(final EventService eventService, final UserService userService, ChatService chatService) {
-        //this.userService = userService;
+        this.userService = userService;
         this.eventService = eventService;
-        //this.chatService = chatService;
+        this.chatService = chatService;
     }
 
     @GetMapping("{event_id}")
@@ -51,11 +52,14 @@ public class EventController {
     //채팅방도 함께 생성해주는 이벤트 생성함수
     @PostMapping
     public ResponseEntity<EventResponse> createEventV2(
-            @RequestBody Event event,
-            @RequestParam User user) {
-        log.info("Creating event: {}", event.getTitle());
+            @RequestBody CreateEventRequestDto eventRequestDto,
+            @RequestParam("user") Long userId) {
 
-        Event saved = eventService.createEventWithChatroom(event, user);
+        User eventCreator = userService.findById(userId); // (3) ID로 User 객체 조회
+
+        Event event = eventService.createEventFromDto(eventRequestDto);
+
+        Event saved = eventService.createEventWithChatroom(event, eventCreator);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(EventResponse.from(saved));
     }
