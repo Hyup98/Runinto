@@ -16,7 +16,13 @@ import java.io.IOException;
 public class SessionFilter implements Filter {
 
     private static final String[] whitelist = {
-            "/auth/signin", "/auth/signup"
+            "/auth/signin", "/auth/signup",
+            "/swagger-ui.html",
+            "/swagger-ui/**",       // Swagger UI 리소스
+            "/v3/api-docs",         // OpenAPI 명세서 경로 (정확한 경로)
+            "/v3/api-docs/**",      // OpenAPI 명세서 하위 경로 (예: /v3/api-docs/swagger-config)
+            "/swagger-resources/**",
+            "/webjars/**"
     };
 
     @Override
@@ -51,6 +57,11 @@ public class SessionFilter implements Filter {
     }
 
     private boolean isWhitelistedPath(String requestURI) {
-        return PatternMatchUtils.simpleMatch(whitelist, requestURI);
+        for (String pattern : whitelist) {
+            if (PatternMatchUtils.simpleMatch(pattern, requestURI)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
