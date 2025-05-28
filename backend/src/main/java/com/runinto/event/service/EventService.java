@@ -7,9 +7,9 @@ import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.ParticipationStatus;
 import com.runinto.event.domain.repository.EventH2Repository;
-import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.exception.event.EventNotFoundException;
+import com.runinto.exception.event.PermissionDeniedException;
 import com.runinto.exception.user.UserIdNotFoundException;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
@@ -18,10 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -84,6 +82,8 @@ public class EventService {
             throw new UserIdNotFoundException("User id not found: " + user.getUserId() + " .");
         }
 
+        event.setHost(user);
+
         // 이벤트 저장
         Event savedEvent = eventRepository.save(event);
 
@@ -91,7 +91,7 @@ public class EventService {
         EventParticipant eventParticipant = EventParticipant.builder()
                 .event(savedEvent)
                 .user(user)
-                .status(ParticipationStatus.MANAGER)
+                .status(ParticipationStatus.APPROVED)
                 .appliedAt(LocalDateTime.now())
                 .build();
 
@@ -134,6 +134,12 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found. ID = " + eventId));
 
+        // 권한 확인: 요청자가 이벤트 방장인지 확인
+        User eventHost = event.getHost();
+        if (eventHost == null || !eventHost.getUserId().equals(userId)) {
+            throw new PermissionDeniedException("PermissionDeniedException");
+        }
+
         EventParticipant participant = event.getEventParticipants().stream()
                 .filter(ep -> ep.getUser().getUserId().equals(userId))
                 .findFirst()
@@ -169,6 +175,12 @@ public class EventService {
     public void rejectParticipant(long eventId, long userId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found. ID = " + eventId));
+
+        // 권한 확인: 요청자가 이벤트 방장인지 확인
+        User eventHost = event.getHost();
+        if (eventHost == null || !eventHost.getUserId().equals(userId)) {
+            throw new PermissionDeniedException("PermissionDeniedException");
+        }
 
         EventParticipant participant = event.getEventParticipants().stream()
                 .filter(ep -> ep.getUser().getUserId().equals(userId))

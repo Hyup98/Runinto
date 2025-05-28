@@ -1,10 +1,8 @@
 package com.runinto.event.presentaion;
 
-import com.runinto.chat.domain.repository.chatroom.Chatroom;
-import com.runinto.chat.presntation.ChatController;
+
 import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.EventType;
 import com.runinto.event.dto.request.FindEventRequest;
@@ -16,18 +14,16 @@ import com.runinto.event.service.EventService;
 import com.runinto.user.domain.User;
 import com.runinto.user.dto.response.EventParticipantsResponse;
 import com.runinto.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -150,16 +146,40 @@ public class EventController {
     @PostMapping("/{eventId}/participants/{userId}/approve")
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long eventId,
-            @PathVariable Long userId) {
-        eventService.approveParticipant(eventId, userId);
+            HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false); // 현재 세션 가져오기 (없으면 null 반환)
+
+        if (session == null) {
+            log.warn("세션이 없습니다. 인증되지 않은 사용자의 접근 시도.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserSessionDto sessionDto = (UserSessionDto) session.getAttribute(SessionConst.LOGIN_MEMBER);
+        eventService.approveParticipant(eventId, sessionDto.getUserId());
+
         return ResponseEntity.ok().build();
     }
+
+
 
     @PostMapping("/{eventId}/participants/{userId}/reject")
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long eventId,
-            @PathVariable Long userId) {
-        eventService.rejectParticipant(eventId, userId);
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false); // 현재 세션 가져오기 (없으면 null 반환)
+
+        if (session == null) {
+            log.warn("세션이 없습니다. 인증되지 않은 사용자의 접근 시도.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserSessionDto sessionDto = (UserSessionDto) session.getAttribute(SessionConst.LOGIN_MEMBER);
+
+
+        eventService.rejectParticipant(eventId, sessionDto.getUserId());
         return ResponseEntity.ok().build();
     }
 
