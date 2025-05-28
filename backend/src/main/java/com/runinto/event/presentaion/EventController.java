@@ -14,6 +14,8 @@ import com.runinto.event.service.EventService;
 import com.runinto.user.domain.User;
 import com.runinto.user.dto.response.EventParticipantsResponse;
 import com.runinto.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.extern.slf4j.Slf4j;
@@ -144,16 +146,40 @@ public class EventController {
     @PostMapping("/{eventId}/participants/{userId}/approve")
     public ResponseEntity<Void> approveParticipant(
             @PathVariable Long eventId,
-            @PathVariable Long userId) {
-        eventService.approveParticipant(eventId, userId);
+            HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false); // 현재 세션 가져오기 (없으면 null 반환)
+
+        if (session == null) {
+            log.warn("세션이 없습니다. 인증되지 않은 사용자의 접근 시도.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserSessionDto sessionDto = (UserSessionDto) session.getAttribute(SessionConst.LOGIN_MEMBER);
+        eventService.approveParticipant(eventId, sessionDto.getUserId());
+
         return ResponseEntity.ok().build();
     }
+
+
 
     @PostMapping("/{eventId}/participants/{userId}/reject")
     public ResponseEntity<Void> rejectParticipant(
             @PathVariable Long eventId,
-            @PathVariable Long userId) {
-        eventService.rejectParticipant(eventId, userId);
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false); // 현재 세션 가져오기 (없으면 null 반환)
+
+        if (session == null) {
+            log.warn("세션이 없습니다. 인증되지 않은 사용자의 접근 시도.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserSessionDto sessionDto = (UserSessionDto) session.getAttribute(SessionConst.LOGIN_MEMBER);
+
+
+        eventService.rejectParticipant(eventId, sessionDto.getUserId());
         return ResponseEntity.ok().build();
     }
 

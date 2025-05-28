@@ -1,5 +1,6 @@
 package com.runinto.exception;
 
+import com.runinto.exception.event.PermissionDeniedException;
 import com.runinto.exception.user.*;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +71,13 @@ public class GlobalExceptionHandler {
 
     //region event
 
+    @ExceptionHandler(PermissionDeniedException.class)
+    public ResponseEntity<ErrorResponse> handlePermissionDeniedException(PermissionDeniedException ex) {
+        log.warn("PermissionDeniedException", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(HttpStatus.CONFLICT, ex.getMessage()));
+    }
     //endregion
 
 }
