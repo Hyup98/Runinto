@@ -1,6 +1,8 @@
 package com.runinto.event.presentaion;
 
 
+import com.runinto.auth.domain.SessionConst;
+import com.runinto.auth.domain.UserSessionDto;
 import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;
@@ -35,13 +37,9 @@ import java.util.stream.Collectors;
 public class EventController {
 
     private final EventService eventService;
-    private final UserService userService;
-    private final ChatService chatService;
 
-    public EventController(final EventService eventService, final UserService userService, ChatService chatService) {
-        this.userService = userService;
+    public EventController(final EventService eventService) {
         this.eventService = eventService;
-        this.chatService = chatService;
     }
 
     @GetMapping("{event_id}")

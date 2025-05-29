@@ -21,7 +21,7 @@ public class EventH2Repository implements EventRepositoryImple {
         this.eventJpaRepository = eventJpaRepository;
     }
 
-    public Event findById(long id) {
+    public Optional<Event> findById(long id) {
         return eventJpaRepository.findById(id);
     }
 
