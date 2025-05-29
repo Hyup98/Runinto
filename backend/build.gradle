@@ -48,6 +48,9 @@ dependencies {
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.session:spring-session-data-redis'
+
+    //MessagePack
+    implementation 'org.msgpack:jackson-dataformat-msgpack:0.9.8'
 }
 
 test {

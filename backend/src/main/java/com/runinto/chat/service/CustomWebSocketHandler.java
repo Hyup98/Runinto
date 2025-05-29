@@ -1,38 +1,35 @@
-package com.runinto.chat.domain;
+package com.runinto.chat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.runinto.chat.domain.repository.chatroom.Chatroom;
-import com.runinto.chat.domain.repository.chatroom.ChatroomH2Repository;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.chat.dto.request.ChatMessageRequest;
-import com.runinto.chat.service.ChatService;
-import com.runinto.event.service.EventService;
 import lombok.extern.slf4j.Slf4j;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.List;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
-public class CustomWebSocketHandler extends TextWebSocketHandler {
+public class CustomWebSocketHandler extends BinaryWebSocketHandler {
     //지금 버전은 같은 유저id이면 여러 페이지에서 동시에 사용하면 마지막 접속한 페이지만 유효 -> 덮어써진다
     //이걸 응용해서 기기당 로그인등(모바일 하나, 데스크탑 하나 등)을 구현할 수 있겠다.
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
-
     private final ChatService chatService;
-
     private final ObjectMapper objectMapper;
 
     public CustomWebSocketHandler(ObjectMapper objectMapper, ChatService chatService) {
-        this.objectMapper = objectMapper;
+        this.objectMapper = new ObjectMapper(new MessagePackFactory());
         this.chatService = chatService;
     }
 
@@ -56,12 +53,17 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
             }
         } else {
             log.warn("userId가 누락되었습니다. 연결 거부 고려 필요. SessionId: {}", sessionId);
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("userId is required"));
         }
     }
 
-    @Override // 데이터 통신시
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        ChatMessageRequest chatMessageRequest = objectMapper.readValue(message.getPayload(), ChatMessageRequest.class);
+    @Override// 데이터 통신시
+    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
+        ByteBuffer byteBuffer = message.getPayload();
+        byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes); // ByteBuffer에서 byte[] 추출
+
+        ChatMessageRequest chatMessageRequest = objectMapper.readValue(bytes, ChatMessageRequest.class);
 
         Long chatroomId = chatMessageRequest.getChatRoomId();
         Long senderId = chatMessageRequest.getSenderId();
@@ -76,23 +78,22 @@ public class CustomWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        for(ChatroomParticipant participant : participants) {
-            Long participantId = participant.getId(); // ChatroomParticipant에서 실제 사용자 ID를 가져오는 방식에 따라 수정 필요
-            WebSocketSession participantSession = sessions.get(participantId);
+        for (ChatroomParticipant participant : participants) {
+            Long participantUserId = participant.getId();
+            WebSocketSession participantSession = sessions.get(participantUserId);
 
             if (participantSession != null && participantSession.isOpen()) {
                 try {
-                    // 메시지 형식은 필요에 따라 수정 (예: JSON 형태의 메시지 객체)
-                    String messageToSend = String.format("{\"senderId\": %d, \"message\": \"%s\", \"chatroomId\": %d}", senderId, content, chatroomId);
-                    participantSession.sendMessage(new TextMessage(messageToSend));
-                    log.info("[메시지 전송 완료] toParticipantId={}, message={}", participantId, content);
+                    ChatMessageRequest messageToSendObject = new ChatMessageRequest(senderId, content, chatroomId);
+
+                    byte[] outputBytes = objectMapper.writeValueAsBytes(messageToSendObject);
+                    participantSession.sendMessage(new BinaryMessage(outputBytes));
+                    log.info("[메시지 전송 완료] toParticipantId={}, message={}", participantUserId, content);
                 } catch (IOException e) {
-                    log.warn("메시지 전송 실패: toParticipantId={}, error={}", participantId, e.getMessage());
+                    log.warn("메시지 전송 실패: toParticipantId={}, error={}", participantUserId, e.getMessage());
                 }
             } else {
-                log.warn("참여자 {}의 세션이 존재하지 않거나 닫혀있습니다. 메시지 전송 스킵.", participantId);
-                // 필요하다면 여기서 sessions 맵에서 해당 participantId를 제거하는 로직을 추가할 수 있습니다.
-                // sessions.remove(participantId);
+                log.warn("참여자 {}의 세션이 존재하지 않거나 닫혀있습니다. 메시지 전송 스킵.", participantUserId);
             }
         }
     }

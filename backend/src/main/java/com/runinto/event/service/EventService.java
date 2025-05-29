@@ -107,7 +107,6 @@ public class EventService {
         return savedEvent;
     }
 
-    @Transactional
     public boolean delete(long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found"));
@@ -115,7 +114,6 @@ public class EventService {
         return eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
     }
 
-    @Transactional
     public void clear() {eventRepository.clear();}
 
     //채팅방 신청 유저 확인

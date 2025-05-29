@@ -62,9 +62,7 @@ public class ChatService {
     @Transactional
     public Chatroom createChatRoomForEvent(Long eventId) {
         log.info("Creating chatroom for event with ID: {}", eventId);
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
-
+        Event event = eventRepository.findById(eventId);
 
         Optional<Chatroom> existingChatroom = chatroomRepository.findByEventId(eventId);
         if (existingChatroom.isPresent()) {
