@@ -126,5 +126,4 @@ public class UserController {
         List<EventResponse> events = userService.getJoinedEvents(userId);
         return ResponseEntity.ok(events);
     }
-
 }

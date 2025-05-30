@@ -2,6 +2,9 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version '1.1.7'
+
+    //protobuf
+    id 'com.google.protobuf' version '0.9.4'
 }
 
 group = 'com.Runinto'
@@ -11,6 +14,7 @@ version = 'unspecified'
 repositories {
     mavenCentral()
 }
+
 ext {
     jwtVersion = '0.12.3'
 }
@@ -51,6 +55,16 @@ dependencies {
 
     //MessagePack
     implementation 'org.msgpack:jackson-dataformat-msgpack:0.9.8'
+
+    //protobuf
+    implementation 'com.google.protobuf:protobuf-java:4.28.2'
+
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.3"
+    }
 }
 
 test {

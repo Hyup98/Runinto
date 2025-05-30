@@ -3,6 +3,7 @@ package com.runinto.chat.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.chat.dto.request.ChatMessageRequest;
+import com.runinto.chat.proto.ChatMessageProto;
 import lombok.extern.slf4j.Slf4j;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.stereotype.Component;
@@ -26,10 +27,14 @@ public class CustomWebSocketHandler extends BinaryWebSocketHandler {
     //이걸 응용해서 기기당 로그인등(모바일 하나, 데스크탑 하나 등)을 구현할 수 있겠다.
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final ChatService chatService;
-    private final ObjectMapper objectMapper;
+    //private final ObjectMapper objectMapper;
 
-    public CustomWebSocketHandler(ObjectMapper objectMapper, ChatService chatService) {
+    /*public CustomWebSocketHandler(ObjectMapper objectMapper, ChatService chatService) {
         this.objectMapper = new ObjectMapper(new MessagePackFactory());
+        this.chatService = chatService;
+    }
+*/
+    public CustomWebSocketHandler(ChatService chatService) {
         this.chatService = chatService;
     }
 
@@ -57,7 +62,7 @@ public class CustomWebSocketHandler extends BinaryWebSocketHandler {
         }
     }
 
-    @Override// 데이터 통신시
+    /*@Override// 데이터 통신시
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
         ByteBuffer byteBuffer = message.getPayload();
         byte[] bytes = new byte[byteBuffer.remaining()];
@@ -96,7 +101,64 @@ public class CustomWebSocketHandler extends BinaryWebSocketHandler {
                 log.warn("참여자 {}의 세션이 존재하지 않거나 닫혀있습니다. 메시지 전송 스킵.", participantUserId);
             }
         }
+    }*/
+
+    @Override// 데이터 통신시
+    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
+        ByteBuffer byteBuffer = message.getPayload();
+        byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes); // ByteBuffer에서 byte[] 추출
+
+        // Protobuf 역직렬화
+        ChatMessageProto.ChatMessage chatMessageProto;
+        try {
+            chatMessageProto = ChatMessageProto.ChatMessage.parseFrom(bytes);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            log.warn("잘못된 Protobuf 메시지 수신: {}. 세션 ID: {}", e.getMessage(), session.getId());
+            session.close(CloseStatus.BAD_DATA.withReason("Invalid Protobuf message"));
+            return;
+        }
+
+        // Protobuf 객체에서 데이터 추출 (getChatRoomId()는 long 반환)
+        long chatroomId = chatMessageProto.getChatRoomId();
+        long senderId = chatMessageProto.getSenderId();
+        String content = chatMessageProto.getMessage();
+
+        log.info("[Protobuf 메시지 수신] userId={}, chatroomId={}, message={}", senderId, chatroomId, content);
+
+        Set<ChatroomParticipant> participants = chatService.findChatroomParticipantByChatroomID(chatroomId).orElse(null);
+        log.info("참여자 수 {}", participants == null ? 0 : participants.size() );
+        if(participants == null || participants.isEmpty()) {
+            log.warn("채팅방 ID {}에 참여자가 없습니다.", chatroomId);
+            return;
+        }
+
+        for (ChatroomParticipant participant : participants) {
+            Long participantUserId = participant.getId(); // 실제 유저 ID를 가져오는지 확인 필요
+            WebSocketSession participantSession = sessions.get(participantUserId);
+
+            if (participantSession != null && participantSession.isOpen()) {
+                try {
+                    // Protobuf 메시지 객체 생성 (응답용)
+                    ChatMessageProto.ChatMessage messageToSendProto = ChatMessageProto.ChatMessage.newBuilder()
+                            .setChatRoomId(chatroomId)
+                            .setSenderId(senderId)
+                            .setMessage(content)
+                            .build();
+
+                    // Protobuf 객체를 byte[]로 직렬화
+                    byte[] outputBytes = messageToSendProto.toByteArray();
+                    participantSession.sendMessage(new BinaryMessage(outputBytes));
+                    log.info("[Protobuf 메시지 전송 완료] toParticipantId={}, message={}", participantUserId, content);
+                } catch (IOException e) {
+                    log.warn("메시지 전송 실패: toParticipantId={}, error={}", participantUserId, e.getMessage());
+                }
+            } else {
+                log.warn("참여자 {}의 세션이 존재하지 않거나 닫혀있습니다. 메시지 전송 스킵.", participantUserId);
+            }
+        }
     }
+
 
     @Override // 웹소켓 통신 에러시
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {

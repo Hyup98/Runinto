@@ -6,6 +6,7 @@ import com.runinto.auth.dto.request.LogoutRequest;
 import com.runinto.auth.dto.request.SignupRequest;
 import com.runinto.auth.service.AuthService;
 import com.runinto.user.domain.User;
+import com.runinto.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
-    public AuthController(final AuthService authService) {
+    public AuthController(final AuthService authService, final UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     @PostMapping("/signin")
@@ -42,7 +45,8 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody SignupRequest signupRequest) {
-
+        //userService.registerUser(signupRequest);
+        //여기서 회원가입 진행
         return ResponseEntity.ok("Signup Successful");
     }
 

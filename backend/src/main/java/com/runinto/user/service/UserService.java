@@ -29,7 +29,6 @@ public class UserService {
         userH2Repository.save(user);
     }
 
-    //굳이 유효한 유저 아이디인지 검사해야할까? -> db에서 찾는 연산을 해야함
     public List<EventResponse> getJoinedEvents(Long userId) {
         if (!userH2Repository.existsByUserId(userId)) {
             throw new UserIdNotFoundException("User id not found: " + userId + " .");

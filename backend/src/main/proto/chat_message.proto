@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.runinto.chat.proto; // 생성될 Java 클래스의 패키지 경로의 일부
+
+option java_package = "com.runinto.chat.proto"; // 생성될 Java 클래스의 전체 패키지 경로
+option java_outer_classname = "ChatMessageProto"; // 생성될 외부 클래스 이름
+
+message ChatMessage {
+  int64 chat_room_id = 1;
+  int64 sender_id = 2;
+  string message = 3;
+}
