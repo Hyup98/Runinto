@@ -15,20 +15,14 @@ public class webSocketConfig implements WebSocketConfigurer {
     private final CustomWebSocketHandler customWebSocketHandler;
     private final UserHandshakeInterceptor userHandshakeInterceptor;
 
-    private final TestCustomWebSocketHandler testCustomWebSocketHandler;
-
     public webSocketConfig(CustomWebSocketHandler customWebSocketHandler, UserHandshakeInterceptor userHandshakeInterceptor, TestCustomWebSocketHandler testCustomWebSocketHandler) {
         this.customWebSocketHandler = customWebSocketHandler;
         this.userHandshakeInterceptor = userHandshakeInterceptor;
-        this.testCustomWebSocketHandler = testCustomWebSocketHandler;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        /*registry.addHandler(customWebSocketHandler, "/ws/chat")
-                .addInterceptors(userHandshakeInterceptor)
-                .setAllowedOrigins("*")*/;
-        registry.addHandler(testCustomWebSocketHandler, "/ws/chat")
+        registry.addHandler(customWebSocketHandler, "/ws/chat")
                 .addInterceptors(userHandshakeInterceptor)
                 .setAllowedOrigins("*");
     }

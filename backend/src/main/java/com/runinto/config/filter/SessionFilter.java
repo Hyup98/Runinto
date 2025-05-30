@@ -16,7 +16,7 @@ import java.io.IOException;
 public class SessionFilter implements Filter {
 
     private static final String[] whitelist = {
-            "/auth/signin", "/auth/signup", "/ws/chat"
+            "/auth/signin", "/auth/signup"
     };
 
     @Override

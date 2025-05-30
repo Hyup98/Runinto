@@ -1,19 +1,13 @@
 package com.runinto.chat.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
-import com.runinto.chat.dto.request.ChatMessageRequest;
 import com.runinto.chat.proto.ChatMessageProto;
 import lombok.extern.slf4j.Slf4j;
-import org.msgpack.jackson.dataformat.MessagePackFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -23,17 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 public class CustomWebSocketHandler extends BinaryWebSocketHandler {
-    //지금 버전은 같은 유저id이면 여러 페이지에서 동시에 사용하면 마지막 접속한 페이지만 유효 -> 덮어써진다
-    //이걸 응용해서 기기당 로그인등(모바일 하나, 데스크탑 하나 등)을 구현할 수 있겠다.
     private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final ChatService chatService;
-    //private final ObjectMapper objectMapper;
 
-    /*public CustomWebSocketHandler(ObjectMapper objectMapper, ChatService chatService) {
-        this.objectMapper = new ObjectMapper(new MessagePackFactory());
-        this.chatService = chatService;
-    }
-*/
     public CustomWebSocketHandler(ChatService chatService) {
         this.chatService = chatService;
     }
@@ -61,47 +47,6 @@ public class CustomWebSocketHandler extends BinaryWebSocketHandler {
             session.close(CloseStatus.POLICY_VIOLATION.withReason("userId is required"));
         }
     }
-
-    /*@Override// 데이터 통신시
-    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
-        ByteBuffer byteBuffer = message.getPayload();
-        byte[] bytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(bytes); // ByteBuffer에서 byte[] 추출
-
-        ChatMessageRequest chatMessageRequest = objectMapper.readValue(bytes, ChatMessageRequest.class);
-
-        Long chatroomId = chatMessageRequest.getChatRoomId();
-        Long senderId = chatMessageRequest.getSenderId();
-        String content = chatMessageRequest.getMessage();
-
-        log.info("[메시지 수신] userId={}, chatroomId={}, message={}", senderId, chatroomId, content);
-
-        Set<ChatroomParticipant> participants = chatService.findChatroomParticipantByChatroomID(chatroomId).orElse(null);
-        log.info("참여자 수 {}", participants == null ? 0 : participants.size() );
-        if(participants == null || participants.isEmpty()) {
-            log.warn("채팅방 ID {}에 참여자가 없습니다.", chatroomId);
-            return;
-        }
-
-        for (ChatroomParticipant participant : participants) {
-            Long participantUserId = participant.getId();
-            WebSocketSession participantSession = sessions.get(participantUserId);
-
-            if (participantSession != null && participantSession.isOpen()) {
-                try {
-                    ChatMessageRequest messageToSendObject = new ChatMessageRequest(senderId, content, chatroomId);
-
-                    byte[] outputBytes = objectMapper.writeValueAsBytes(messageToSendObject);
-                    participantSession.sendMessage(new BinaryMessage(outputBytes));
-                    log.info("[메시지 전송 완료] toParticipantId={}, message={}", participantUserId, content);
-                } catch (IOException e) {
-                    log.warn("메시지 전송 실패: toParticipantId={}, error={}", participantUserId, e.getMessage());
-                }
-            } else {
-                log.warn("참여자 {}의 세션이 존재하지 않거나 닫혀있습니다. 메시지 전송 스킵.", participantUserId);
-            }
-        }
-    }*/
 
     @Override// 데이터 통신시
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
