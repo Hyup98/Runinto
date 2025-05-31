@@ -1,5 +1,7 @@
 package com.runinto.event.presentaion;
 
+import com.runinto.auth.domain.SessionConst;
+import com.runinto.auth.domain.UserSessionDto;
 import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;

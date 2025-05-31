@@ -28,10 +28,6 @@ import java.io.IOException;
 public class AuthController {
 
     private final AuthService authService;
-
-    @Value("${user.default-profile}")
-    private String defaultProfilePath;
-
     private final UserService userService;
     private final ImageStorageService imageStorageService;
 
@@ -51,7 +47,6 @@ public class AuthController {
         return ResponseEntity.ok("Login Successful");
     }
 
-
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         authService.logout(request);
@@ -64,28 +59,9 @@ public class AuthController {
 
         userService.ensureUserNameAndEmailAreUnique(request.getName(), request.getEmail());
 
-        // 2. 이미지 저장
-        String imgUrl = null;
-        if (imageFile != null && !imageFile.isEmpty()) {
-            imgUrl = imageStorageService.saveImage(imageFile);
-        }
-        else {
-            imgUrl = defaultProfilePath;
-        }
+        String imgUrl = imageStorageService.saveImage(imageFile);
 
-        // 3. 유저 저장
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(request.getPassword())
-                .imgUrl(imgUrl)
-                .description(request.getDescription())
-                .gender(request.getGender())
-                .age(request.getAge())
-                .role(request.getRole() != null ? request.getRole() : Role.USER)
-                .build();
-
-        userService.registerUser(user);
+        User user = userService.registerUser(request, imgUrl);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ProfileResponse.from(user));

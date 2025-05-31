@@ -62,7 +62,7 @@ public class Event {
     private User host;
 
     @Builder
-    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, int participants, Set<EventCategory> categories, User host /* 빌더에 host 추가 */) {
+    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, Set<EventParticipant> participants, Set<EventCategory> categories, User host) {
         this.title = title;
         this.id = id;
         this.description = description;
@@ -72,7 +72,7 @@ public class Event {
         this.longitude = longitude;
         this.chatroom = chatroom;
         this.eventCategories = categories;
-        this.participants = participants;
+        this.eventParticipants = participants;
         this.host = host; // host 초기화
     }
 
