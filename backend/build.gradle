@@ -19,8 +19,6 @@ ext {
     jwtVersion = '0.12.3'
 }
 
-
-//전체적
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
