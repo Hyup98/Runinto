@@ -2,9 +2,11 @@ package com.runinto.user.service;
 
 import com.runinto.event.domain.Event;
 import com.runinto.exception.user.*;
+import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
 import com.runinto.user.domain.repository.UserRepositoryImple;
+import com.runinto.user.dto.request.RegisterRequest;
 import com.runinto.user.dto.response.EventResponse;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,27 @@ public class UserService {
     }
 
     public User registerUser(final User user) {
+        if(userH2Repository.existsByName(user.getName())) {
+            throw new UserNameAlreadyExistsException("User with name '" + user.getName() + "' already exists.");
+        }
+        if(userH2Repository.existsByEmail(user.getEmail())) {
+            throw new UserEmailAlreadyExistsException("User with email '" + user.getEmail() + "' already exists.");
+        }
+        return userH2Repository.save(user);
+    }
+
+    public User registerUser(RegisterRequest request,String imgUrl) {
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .imgUrl(imgUrl)
+                .description(request.getDescription())
+                .gender(request.getGender())
+                .age(request.getAge())
+                .role(request.getRole() != null ? request.getRole() : Role.USER)
+                .build();
+
         if(userH2Repository.existsByName(user.getName())) {
             throw new UserNameAlreadyExistsException("User with name '" + user.getName() + "' already exists.");
         }

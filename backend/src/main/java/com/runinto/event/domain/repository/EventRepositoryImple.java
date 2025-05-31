@@ -1,7 +1,6 @@
 package com.runinto.event.domain.repository;
 
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventType;
 
 import java.util.*;

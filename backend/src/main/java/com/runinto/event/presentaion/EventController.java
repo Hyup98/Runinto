@@ -1,12 +1,12 @@
 package com.runinto.event.presentaion;
 
-
 import com.runinto.auth.domain.SessionConst;
 import com.runinto.auth.domain.UserSessionDto;
 import com.runinto.chat.service.ChatService;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.EventType;
+import com.runinto.event.dto.request.CreateEventRequestDto;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.event.dto.request.JoinEventRequest;
 import com.runinto.event.dto.request.UpdateEventRequest;
@@ -52,11 +52,14 @@ public class EventController {
     //채팅방도 함께 생성해주는 이벤트 생성함수
     @PostMapping
     public ResponseEntity<EventResponse> createEventV2(
-            @RequestBody Event event,
-            @RequestParam User user) {
-        log.info("Creating event: {}", event.getTitle());
+            @RequestBody CreateEventRequestDto eventRequestDto,
+            @RequestParam("user") Long userId) {
 
-        Event saved = eventService.createEventWithChatroom(event, user);
+        User eventCreator = userService.findById(userId); // (3) ID로 User 객체 조회
+
+        Event event = eventService.createEventFromDto(eventRequestDto);
+
+        Event saved = eventService.createEventWithChatroom(event, eventCreator);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(EventResponse.from(saved));
     }
@@ -92,15 +95,14 @@ public class EventController {
             @RequestParam(required = false) @DecimalMin("-90.0") @DecimalMax("90.0") Double neLat,
             @RequestParam(required = false) @DecimalMin("-180.0") @DecimalMax("180.0") Double swLng,
             @RequestParam(required = false) @DecimalMin("-180.0") @DecimalMax("180.0") Double neLng,
-            @RequestParam(required = false) Set<EventType> category,
-            @RequestParam(required = false) Boolean isPublic
-            ) {
-        //위도 경도 범위 체크
+            @RequestParam(required = false) Set<EventType> category
+            // @RequestParam(required = false) Boolean isPublic
+    ) {
         if (swLat != null && swLng != null && neLat != null && neLng != null) {
-            if (neLat < swLat || neLng < swLng) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 범위입니다.");
-            }
-        }
+             if (neLat < swLat || neLng < swLng) {
+                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 범위입니다.");
+             }
+         }
 
         FindEventRequest condition = FindEventRequest.builder()
                 .swlatitude(swLat)
@@ -108,15 +110,13 @@ public class EventController {
                 .swlongitude(swLng)
                 .nelongitude(neLng)
                 .categories(category)
+                // .isPublic(isPublic) // isPublic이 FindEventRequest에 설정되지 않음
                 .build();
 
         List<Event> events = eventService.findByDynamicCondition(condition);
-        for (Event event : events) {
-            log.info("\n " + event.toString());
-        }
+
         return ResponseEntity.ok(new EventListResponse(events));
     }
-
 
     /*이벤트 삭제 요청
     추가예정 기능

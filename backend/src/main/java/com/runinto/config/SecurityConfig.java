@@ -4,6 +4,7 @@ import com.runinto.auth.domain.CustomUserDetails;
 import com.runinto.config.filter.JWTFilter;
 import com.runinto.config.filter.LoginFilter;
 import com.runinto.util.JWTUtil;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer; // CSRF 간결화
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,49 +47,35 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        /*//csrf disable
         http
-                .csrf((auth) -> auth.disable());
+                // CSRF 보호 비활성화 (Stateless API 또는 세션 기반이라도 특정 상황에 따라)
+                .csrf(AbstractHttpConfigurer::disable)
 
-        //From 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
+                // HTTP Basic 인증 비활성화 (SessionFilter를 사용하므로)
+                .httpBasic(AbstractHttpConfigurer::disable)
 
-        //http basic 인증 방식 disable
-        http
-                .httpBasic((auth) -> auth.disable());
+                // 폼 로그인 비활성화 (SessionFilter를 사용하므로)
+                .formLogin(AbstractHttpConfigurer::disable)
 
-
-        http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join").permitAll()
-                        .requestMatchers("/admin").hasRole("ADMIN")
-                        .anyRequest().authenticated());
-
-        http
-                .addFilterBefore(new JWTFilter(jwtUtil), LoginFilter.class);
-        http
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil), UsernamePasswordAuthenticationFilter.class);
-
-        //세션 설정
-        http
-                .sessionManagement((session) -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        return http.build();*/
-
-        http
-                .csrf(csrf -> csrf.disable())
+                // 요청에 대한 접근 권한 설정: 모든 요청을 일단 허용 (실제 권한 검사는 SessionFilter에서)
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        .anyRequest().permitAll() // SessionFilter가 먼저 동작하므로 여기서는 모든 요청 허용
                 )
-                .httpBasic(Customizer.withDefaults());
-        http
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // 세션 관리: STATELESS로 설정 (SessionFilter에서 세션을 사용하더라도,
+                // Spring Security 자체의 세션 생성 및 사용을 최소화하려는 의도일 수 있음.
+                // 만약 SessionFilter가 HttpSession을 적극적으로 사용하고 Spring Security가 이를 인지해야 한다면,
+                // 이 부분은 SessionCreationPolicy.IF_REQUIRED 등으로 변경하거나 SessionFilter 로직과 맞출 필요가 있음)
+                // 하지만 현재 SessionFilter는 getSession(false)를 사용하므로, 이 설정과 크게 충돌하지 않을 수 있음.
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // H2 콘솔 사용을 위한 Frame Options 설정 (개발 환경에서만 필요)
                 .headers(headers -> headers
-                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin) // H2 콘솔사용
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 );
+
 
         return http.build();
     }

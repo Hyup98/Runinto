@@ -4,22 +4,30 @@ import com.runinto.chat.domain.repository.chatroom.Chatroom;
 import com.runinto.chat.domain.repository.chatroom.ChatroomH2Repository;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.event.domain.Event;
+import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.ParticipationStatus;
 import com.runinto.event.domain.repository.EventH2Repository;
+import com.runinto.event.domain.repository.EventRepositoryImple;
+import com.runinto.event.dto.request.CreateEventRequestDto;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.exception.event.EventNotFoundException;
 import com.runinto.exception.event.PermissionDeniedException;
 import com.runinto.exception.user.UserIdNotFoundException;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,6 +37,9 @@ public class EventService {
     private final UserH2Repository userH2Repository;
     private final EventH2Repository eventRepository;
     private final ChatroomH2Repository chatroomH2Repository;
+
+    @PersistenceContext
+    private EntityManager em;
 
     public EventService(final EventH2Repository eventRepository, final UserH2Repository userH2Repository, ChatroomH2Repository chatroomH2Repository) {
         this.eventRepository = eventRepository;
@@ -45,33 +56,40 @@ public class EventService {
         return eventRepository.findAll();
     }
 
-    @Transactional
     public void save(Event event) {
         eventRepository.save(event);
     }
 
     //todo 지금 이건 모든 이벤트를 다 가져온 후 필터링을 거는 방식 -> db에서 가져올 때 sql로 필터링을 하는 방법으로 바꿔야 한다.
     public List<Event> findByDynamicCondition(FindEventRequest request) {
-        return eventRepository.findAll().stream()
-                .filter(event -> {
-                    if (request.getSwlatitude() != null && request.getSwlongitude() != null &&
-                            request.getNelatitude() != null && request.getNelongitude() != null) {
-                        return event.isInArea(
-                                request.getNelatitude(),
-                                request.getNelongitude(),
-                                request.getSwlatitude(),
-                                request.getSwlongitude()
-                        );
-                    }
-                    return true;
-                })
-                .filter(event -> {
-                    if (request.getCategories() != null && !request.getCategories().isEmpty()) {
-                        return event.hasMatchingCategory(request.getCategories());
-                    }
-                    return true;
-                })
-                .toList();
+        return eventRepository.findByDynamicCondition(request);
+    }
+
+    public Event createEventFromDto(CreateEventRequestDto requestDto) {
+
+        Event event = Event.builder()
+                .title(requestDto.getTitle())
+                .description(requestDto.getDescription())
+                .maxParticipants(requestDto.getMaxParticipants())
+                .latitude(requestDto.getLatitude())
+                .longitude(requestDto.getLongitude())
+                .creationTime(requestDto.getCreationTime())
+                .participants(new HashSet<>())
+                .categories(new HashSet<>())
+                .build();
+        event.setPublic(requestDto.getIsPublic());
+
+        if (requestDto.getCategories() != null && !requestDto.getCategories().isEmpty()) {
+            Set<EventCategory> eventCategories = requestDto.getCategories().stream()
+                    .map(eventType -> EventCategory.builder()
+                            .category(eventType)
+                            .event(event) // 생성된 event 객체를 연결
+                            .build())
+                    .collect(Collectors.toSet());
+            event.setEventCategories(eventCategories);
+        }
+
+        return event;
     }
 
     //이벤트와 채팅방은 1:1 관계 이벤트에 채팅방이 종속관계이므로 채팅방 관리는 이벤트의 생명주기를 따르고 관리함
@@ -223,8 +241,13 @@ public class EventService {
                 .appliedAt(LocalDateTime.now())
                 .build();
 
+        System.out.println(em.contains(event)); // true면 영속 상태
+
+        participant.setEvent(event);
+        participant.setUser(user);
         event.getEventParticipants().add(participant);
         user.getEventParticipants().add(participant);
+        em.flush();
     }
 
 }
