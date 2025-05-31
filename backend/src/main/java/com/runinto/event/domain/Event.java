@@ -48,15 +48,13 @@ public class Event {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic = true;
 
-    private int participants;
-
     @OneToOne(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Chatroom chatroom;
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<EventCategory> eventCategories = new HashSet<>();
 
-    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -64,7 +62,7 @@ public class Event {
     private User host;
 
     @Builder
-    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, int participants, Set<EventCategory> categories, User host /* 빌더에 host 추가 */) {
+    public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, Set<EventParticipant> participants, Set<EventCategory> categories, User host) {
         this.title = title;
         this.id = id;
         this.description = description;
@@ -74,7 +72,7 @@ public class Event {
         this.longitude = longitude;
         this.chatroom = chatroom;
         this.eventCategories = categories;
-        this.participants = participants;
+        this.eventParticipants = participants;
         this.host = host; // host 초기화
     }
 
