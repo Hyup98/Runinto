@@ -23,4 +23,6 @@ public interface EventJpaRepository extends JpaRepository<Event, Long> , JpaSpec
             @Param("nelng") double nelng,
             @Param("swlat") double swlat,
             @Param("swlng") double swlng);
+
+    List<Event> findByGridIdIn(List<String> gridIds);
 }

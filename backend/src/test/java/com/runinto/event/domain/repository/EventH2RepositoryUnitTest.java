@@ -25,7 +25,7 @@ class EventH2RepositoryUnitTest {
     private EventJpaRepository eventJpaRepositoryMock; // EventJpaRepository를 모킹
 
     @InjectMocks
-    private EventH2Repository eventH2Repository; // 테스트 대상 클래스
+    private EventRepository eventH2Repository; // 테스트 대상 클래스
 
     private Event sampleEvent;
 
