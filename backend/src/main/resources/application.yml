@@ -1,9 +1,16 @@
 spring:
+  #세션용 Redis-
   session:
-    store-type: redis  # Redis에 세션 저장
+    store-type: redis
     redis:
       host: localhost
       port: 6379
+
+  #캐시용 Redis
+  cache:
+    redis:
+      host: localhost
+      port: 6380
 
   jwt:
     secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb

@@ -15,11 +15,11 @@ import java.util.Set;
 @Slf4j
 @Repository
 @Primary
-public class EventH2Repository implements EventRepositoryImple {
+public class EventRepository {
 
     private final EventJpaRepository eventJpaRepository;
 
-    public EventH2Repository(EventJpaRepository eventJpaRepository) {
+    public EventRepository(EventJpaRepository eventJpaRepository) {
         this.eventJpaRepository = eventJpaRepository;
     }
 
@@ -86,5 +86,9 @@ public class EventH2Repository implements EventRepositoryImple {
 
     public void clear() {
         eventJpaRepository.deleteAll();
+    }
+
+    public List<Event> findByGridIdIn(List<String> gridIds) {
+        return eventJpaRepository.findByGridIdIn(gridIds);
     }
 }

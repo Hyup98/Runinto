@@ -58,8 +58,11 @@ public class Event {
     private Set<EventParticipant> eventParticipants = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "host_user_id", nullable = false) // 'user' 테이블의 PK를 참조하는 'host_user_id' 컬럼 생성
+    @JoinColumn(name = "host_user_id", nullable = false)
     private User host;
+
+    @Column(nullable = false)
+    private String gridId; // 그리드 ID 저장
 
     @Builder
     public Event(String title, Long id, String description, int maxParticipants, Time creationTime, double latitude, double longitude, Chatroom chatroom, Set<EventParticipant> participants, Set<EventCategory> categories, User host) {

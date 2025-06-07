@@ -7,8 +7,7 @@ import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
 import com.runinto.event.domain.EventParticipant;
 import com.runinto.event.domain.ParticipationStatus;
-import com.runinto.event.domain.repository.EventH2Repository;
-import com.runinto.event.domain.repository.EventRepositoryImple;
+import com.runinto.event.domain.repository.EventRepository;
 import com.runinto.event.dto.request.CreateEventRequestDto;
 import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.exception.event.EventNotFoundException;
@@ -16,35 +15,30 @@ import com.runinto.exception.event.PermissionDeniedException;
 import com.runinto.exception.user.UserIdNotFoundException;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.runinto.util.GeoUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
 public class EventService {
 
     private final UserH2Repository userH2Repository;
-    private final EventH2Repository eventRepository;
-    private final ChatroomH2Repository chatroomH2Repository;
+    private final EventRepository eventRepository;
+    private final EventCacheService eventCacheService;
 
-    @PersistenceContext
-    private EntityManager em;
-
-    public EventService(final EventH2Repository eventRepository, final UserH2Repository userH2Repository, ChatroomH2Repository chatroomH2Repository) {
+    public EventService(final EventRepository eventRepository, final UserH2Repository userH2Repository, EventCacheService eventCacheService) {
         this.eventRepository = eventRepository;
         this.userH2Repository = userH2Repository;
-        this.chatroomH2Repository = chatroomH2Repository;
+        this.eventCacheService = eventCacheService;
     }
 
     public Event findById(long id) {
@@ -60,10 +54,52 @@ public class EventService {
         eventRepository.save(event);
     }
 
-    //todo 지금 이건 모든 이벤트를 다 가져온 후 필터링을 거는 방식 -> db에서 가져올 때 sql로 필터링을 하는 방법으로 바꿔야 한다.
+    //위치 필터는 필수, 카테고리 필터는 선택
     public List<Event> findByDynamicCondition(FindEventRequest request) {
-        return eventRepository.findByDynamicCondition(request);
+        boolean hasCategoryFilter = request.getCategories() != null && !request.getCategories().isEmpty();
+
+        // 1. 그리드 ID 목록을 계산합니다.
+        List<String> requiredGridIds = GeoUtil.getGridIdsForBoundingBox(
+                request.getSwlatitude(), request.getSwlongitude(),
+                request.getNelatitude(), request.getNelongitude()
+        );
+
+        // 2. 캐시에서 그리드 데이터를 먼저 조회합니다.
+        Map<String, List<Event>> cachedGrids = eventCacheService.findGridsFromCache(requiredGridIds);
+        List<String> missedGridIds = requiredGridIds.stream()
+                .filter(id -> !cachedGrids.containsKey(id))
+                .collect(Collectors.toList());
+
+        // 3. 캐시에 없었던 그리드(Cache Miss)는 DB에서 조회하여 캐시를 채웁니다.
+        if (!missedGridIds.isEmpty()) {
+            Map<String, List<Event>> newGrids = eventCacheService.findGridsFromDbAndCache(missedGridIds);
+            cachedGrids.putAll(newGrids); // DB 결과를 기존 캐시 결과에 합칩니다.
+        }
+
+        // 4. 캐시와 DB에서 가져온 모든 이벤트를 통합합니다.
+        List<Event> allEventsInGrids = cachedGrids.values().stream()
+                .flatMap(List::stream)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 5. 통합된 데이터를 대상으로 최종 필터링을 수행합니다.
+        Stream<Event> eventStream = allEventsInGrids.stream();
+
+        // 5-1. 정확한 영역으로 1차 필터링
+        eventStream = eventStream.filter(event ->
+                event.getLatitude() >= request.getSwlatitude() && event.getLatitude() <= request.getNelatitude() &&
+                        event.getLongitude() >= request.getSwlongitude() && event.getLongitude() <= request.getNelongitude());
+
+        // 5-2. 카테고리 필터가 요청에 포함된 경우에만 2차 필터링
+        if (hasCategoryFilter) {
+            eventStream = eventStream.filter(event ->
+                    event.getEventCategories().stream()
+                            .anyMatch(ec -> request.getCategories().contains(ec.getCategory())));
+        }
+
+        return eventStream.collect(Collectors.toList());
     }
+
 
     public Event createEventFromDto(CreateEventRequestDto requestDto) {
 
@@ -102,6 +138,12 @@ public class EventService {
 
         event.setHost(user);
 
+        String gridId = GeoUtil.getGridId(event.getLatitude(), event.getLongitude());
+        event.setGridId(gridId);
+
+        // 캐시 무효화
+        eventCacheService.invalidateGridCache(gridId);
+
         // 이벤트 저장
         Event savedEvent = eventRepository.save(event);
 
@@ -128,6 +170,9 @@ public class EventService {
     public boolean delete(long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+        // 삭제 전 캐시 무효화
+        eventCacheService.invalidateGridCache(event.getGridId());
 
         return eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
     }
@@ -241,13 +286,9 @@ public class EventService {
                 .appliedAt(LocalDateTime.now())
                 .build();
 
-        System.out.println(em.contains(event)); // true면 영속 상태
-
         participant.setEvent(event);
         participant.setUser(user);
         event.getEventParticipants().add(participant);
         user.getEventParticipants().add(participant);
-        em.flush();
     }
-
 }
