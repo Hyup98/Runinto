@@ -1,7 +1,6 @@
 package com.runinto.event.service;
 
 import com.runinto.chat.domain.repository.chatroom.Chatroom;
-import com.runinto.chat.domain.repository.chatroom.ChatroomH2Repository;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.EventCategory;
@@ -13,12 +12,13 @@ import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.exception.event.EventNotFoundException;
 import com.runinto.exception.event.PermissionDeniedException;
 import com.runinto.exception.user.UserIdNotFoundException;
+import com.runinto.kafka.dto.CacheUpdateMessage;
+import com.runinto.kafka.service.KafkaProducerService;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
 import com.runinto.util.GeoUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -34,20 +34,18 @@ public class EventService {
     private final UserH2Repository userH2Repository;
     private final EventRepository eventRepository;
     private final EventCacheService eventCacheService;
+    private final KafkaProducerService kafkaProducerService;
 
-    public EventService(final EventRepository eventRepository, final UserH2Repository userH2Repository, EventCacheService eventCacheService) {
+    public EventService(final EventRepository eventRepository, final UserH2Repository userH2Repository, EventCacheService eventCacheService, KafkaProducerService kafkaProducerService) {
         this.eventRepository = eventRepository;
         this.userH2Repository = userH2Repository;
         this.eventCacheService = eventCacheService;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     public Event findById(long id) {
         return eventRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "이벤트를 찾을 수 없습니다."));
-    }
-
-    public List<Event> findAll() {
-        return eventRepository.findAll();
     }
 
     public void save(Event event) {
@@ -142,7 +140,11 @@ public class EventService {
         event.setGridId(gridId);
 
         // 캐시 무효화
-        eventCacheService.invalidateGridCache(gridId);
+        //eventCacheService.invalidateGridCache(gridId);
+
+        // 카프카에 캐시 갱신 메시지를 보냅니다.
+        CacheUpdateMessage message = new CacheUpdateMessage("INVALIDATE_GRID", gridId);
+        kafkaProducerService.send("cache-management-topic", message);
 
         // 이벤트 저장
         Event savedEvent = eventRepository.save(event);
@@ -172,7 +174,12 @@ public class EventService {
                 .orElseThrow(() -> new EventNotFoundException("Event not found"));
 
         // 삭제 전 캐시 무효화
-        eventCacheService.invalidateGridCache(event.getGridId());
+        //eventCacheService.invalidateGridCache(event.getGridId());
+
+        // 카프카에 캐시 갱신 메시지를 보냅니다.
+        CacheUpdateMessage message = new CacheUpdateMessage("INVALIDATE_GRID", event.getGridId());
+        kafkaProducerService.send("cache-management-topic", message);
+
 
         return eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
     }

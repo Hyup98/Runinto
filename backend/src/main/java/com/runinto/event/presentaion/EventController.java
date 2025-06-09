@@ -38,12 +38,10 @@ public class EventController {
 
     private final EventService eventService;
     private final UserService userService;
-    private final ChatService chatService;
 
-    public EventController(final EventService eventService, final UserService userService, ChatService chatService) {
+    public EventController(final EventService eventService, final UserService userService) {
         this.userService = userService;
         this.eventService = eventService;
-        this.chatService = chatService;
     }
 
     @GetMapping("{event_id}")
