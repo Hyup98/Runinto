@@ -1,12 +1,9 @@
-package com.runinto.chat.domain;
+package com.runinto.chat.presntation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.runinto.chat.domain.repository.chatroom.Chatroom;
-import com.runinto.chat.domain.repository.chatroom.ChatroomH2Repository;
 import com.runinto.chat.domain.repository.chatroom.ChatroomParticipant;
 import com.runinto.chat.dto.request.ChatMessageRequest;
 import com.runinto.chat.service.ChatService;
-import com.runinto.event.service.EventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -15,7 +12,6 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
