@@ -50,6 +50,16 @@ public class CustomWebSocketHandler extends BinaryWebSocketHandler {
 
     @Override// 데이터 통신시
     protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
+        // 1. 메시지 송신자의 세션을 기반으로 유저 아이디 획득
+        String authenticatedUserIdString = (String) session.getAttributes().get("userId");
+        if (authenticatedUserIdString == null) {
+            log.warn("인증되지 않은 세션에서 메시지 수신 시도. SessionId: {}", session.getId());
+            session.close();
+            return;
+        }
+        Long authenticatedUserId = Long.parseLong(authenticatedUserIdString);
+
+
         ByteBuffer byteBuffer = message.getPayload();
         byte[] bytes = new byte[byteBuffer.remaining()];
         byteBuffer.get(bytes); // ByteBuffer에서 byte[] 추출
@@ -68,6 +78,14 @@ public class CustomWebSocketHandler extends BinaryWebSocketHandler {
         long chatroomId = chatMessageProto.getChatRoomId();
         long senderId = chatMessageProto.getSenderId();
         String content = chatMessageProto.getMessage();
+
+        // 세션 id와 senderId의 일치 확인
+        if (!authenticatedUserId.equals(senderId)) {
+            log.warn("메시지 senderId 불일치! 인증된 사용자: {}, 페이로드: {}. 메시지를 무시합니다.", authenticatedUserId, senderId);
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Sender ID mismatch"));
+            return;
+        }
+
 
         log.info("[Protobuf 메시지 수신] userId={}, chatroomId={}, message={}", senderId, chatroomId, content);
 
