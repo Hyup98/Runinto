@@ -12,7 +12,7 @@ import com.runinto.event.dto.request.FindEventRequest;
 import com.runinto.exception.event.EventNotFoundException;
 import com.runinto.exception.event.PermissionDeniedException;
 import com.runinto.exception.user.UserIdNotFoundException;
-import com.runinto.kafka.dto.CacheUpdateMessage;
+import common.kafka.dto.CacheUpdateMessage;// common 모듈의 DTO를 import
 import com.runinto.kafka.service.KafkaProducerService;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
@@ -143,7 +143,7 @@ public class EventService {
         //eventCacheService.invalidateGridCache(gridId);
 
         // 카프카에 캐시 갱신 메시지를 보냅니다.
-        CacheUpdateMessage message = new CacheUpdateMessage("INVALIDATE_GRID", gridId);
+        CacheUpdateMessage message = new CacheUpdateMessage("INVALIDATE_GRID", event.getGridId());
         kafkaProducerService.send("cache-management-topic", message);
 
         // 이벤트 저장
@@ -176,12 +176,17 @@ public class EventService {
         // 삭제 전 캐시 무효화
         //eventCacheService.invalidateGridCache(event.getGridId());
 
+        String gridId = event.getGridId();
         // 카프카에 캐시 갱신 메시지를 보냅니다.
-        CacheUpdateMessage message = new CacheUpdateMessage("INVALIDATE_GRID", event.getGridId());
-        kafkaProducerService.send("cache-management-topic", message);
+        boolean isDeleted = eventRepository.delete(event);
 
+        if (isDeleted) {
+            // --- 캐시 무효화 로직 변경 ---
+            CacheUpdateMessage message = new CacheUpdateMessage("INVALIDATE_GRID", gridId);
+            kafkaProducerService.send("cache-management-topic", message);
+        }
 
-        return eventRepository.delete(event); // 연관된 엔티티들 모두 cascade 삭제됨
+        return isDeleted;
     }
 
     public void clear() {eventRepository.clear();}

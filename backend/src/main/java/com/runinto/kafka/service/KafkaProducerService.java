@@ -1,6 +1,5 @@
 package com.runinto.kafka.service;
 
-import com.runinto.kafka.dto.CacheUpdateMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package com.runinto.kafka.dto;
+package common.kafka.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CacheUpdateMessage {
-    private String action; // 예: "INVALIDATE_GRID"
-    private String gridId; // 무효화할 그리드 ID
-    // 필요하다면 다른 데이터 추가 가능
+    private String action; // 수행할 작업 (예: "INVALIDATE_GRID")
+    private String gridId; // 작업 대상이 되는 그리드 ID
 }

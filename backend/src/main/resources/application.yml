@@ -52,17 +52,5 @@ server:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-    consumer:
-      # 컨슈머들을 그룹으로 묶기 위한 ID
-      group-id: cache-group # 그룹 ID는 원하는 이름으로 지정
-      # 카프카에 처음 연결했을 때, 읽을 데이터가 없으면 어디부터 읽을지 결정 (earliest: 가장 처음부터)
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      # JSON 역직렬화 시 신뢰할 수 있는 패키지 설정. 보안을 위해 모든 패키지(*)를 허용하거나,
-      # 특정 DTO 패키지(com.runinto.dto.*)만 지정할 수 있습니다.
-      properties:
-        spring.json.trusted.packages: "*"
-
 user:
   default-profile: /images/default_profile.png
