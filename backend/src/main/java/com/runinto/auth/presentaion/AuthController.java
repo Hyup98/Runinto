@@ -7,6 +7,7 @@ import com.runinto.auth.dto.request.SignupRequest;
 import com.runinto.auth.service.AuthService;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
+import com.runinto.user.service.UserService;
 import com.runinto.user.dto.request.RegisterRequest;
 import com.runinto.user.dto.response.ProfileResponse;
 import com.runinto.user.service.UserService;
@@ -52,6 +53,7 @@ public class AuthController {
         authService.logout(request);
         return ResponseEntity.ok("Logout Successful");
     }
+
 
     @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> signup(@RequestPart("profile") RegisterRequest request,
