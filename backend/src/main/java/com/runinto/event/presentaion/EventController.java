@@ -37,8 +37,10 @@ import java.util.stream.Collectors;
 public class EventController {
 
     private final EventService eventService;
+    private final UserService userService;
 
-    public EventController(final EventService eventService) {
+    public EventController(final EventService eventService, final UserService userService) {
+        this.userService = userService;
         this.eventService = eventService;
     }
 
@@ -118,10 +120,6 @@ public class EventController {
         return ResponseEntity.ok(new EventListResponse(events));
     }
 
-    /*이벤트 삭제 요청
-    추가예정 기능
-    1. 이벤트 관리자만 삭제 가능-> 권한
-     */
     @DeleteMapping("{event_id}")
     public ResponseEntity<String> DeleteEventV1(@PathVariable("event_id") Long eventId) {
         if(eventService.delete(eventId))

@@ -31,13 +31,13 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    @PostMapping
+    /*@PostMapping
     public ResponseEntity<ChatroomResponse> createChatroom(@PathVariable @NotNull Long eventId) {
         log.info("Creating chatroom for event with ID: {}", eventId);
         Chatroom chatroom = chatService.createChatRoomForEvent(eventId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ChatroomResponse(chatroom.getId()));
-    }
+    }*/
 
     @GetMapping
     public ResponseEntity<ChatroomResponse> getChatroom(@PathVariable @NotNull Long eventId) {
@@ -46,11 +46,11 @@ public class ChatController {
         return ResponseEntity.ok(new ChatroomResponse(chatroom.getId()));
     }
 
-    @DeleteMapping
+    /*@DeleteMapping
     public ResponseEntity<Void> deleteChatroom(@PathVariable @NotNull Long eventId) {
         log.info("Deleting chatroom for event with ID: {}", eventId);
         chatService.deleteChatroomByEventId(eventId);
         return ResponseEntity.noContent().build();
-    }
+    }*/
 
 }

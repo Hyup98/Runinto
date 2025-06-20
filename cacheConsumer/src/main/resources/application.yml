@@ -1,0 +1,22 @@
+spring:
+  # 이 애플리케이션은 웹 서버를 띄우지 않으므로 NONE으로 설정하여 리소스를 절약합니다.
+  main:
+    web-application-type: none
+
+  # 캐시용 Redis 접속 정보
+  cache:
+    redis:
+      host: localhost
+      port: 6380
+
+  # 카프카 컨슈머 설정
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: cache-management-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # common 모드의 DTO 패키지를 신뢰하도록 설정
+        spring.json.trusted.packages: "com.runinto.common.kafka.dto"

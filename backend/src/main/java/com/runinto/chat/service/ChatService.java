@@ -9,7 +9,7 @@ import com.runinto.chat.domain.repository.message.ChatMessageH2Repository;
 import com.runinto.chat.domain.repository.message.ChatMessageRepositoryImple;
 import com.runinto.chat.dto.response.ChatroomResponse;
 import com.runinto.event.domain.Event;
-import com.runinto.event.domain.repository.EventH2Repository;
+import com.runinto.event.domain.repository.EventRepository;
 import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,9 +31,9 @@ public class ChatService {
 
     private final ChatroomRepositoryImple chatroomRepository;
     private final ChatMessageRepositoryImple chatMessageRepository;
-    private final EventRepositoryImple eventRepository;
+    private final EventRepository eventRepository;
 
-    public ChatService(ChatroomH2Repository chatroomH2Repository, ChatMessageH2Repository chatMessageH2Repository, EventH2Repository eventH2Repository) {
+    public ChatService(ChatroomH2Repository chatroomH2Repository, ChatMessageH2Repository chatMessageH2Repository, EventRepository eventH2Repository) {
         this.chatroomRepository = chatroomH2Repository;
         this.chatMessageRepository = chatMessageH2Repository;
         this.eventRepository = eventH2Repository;

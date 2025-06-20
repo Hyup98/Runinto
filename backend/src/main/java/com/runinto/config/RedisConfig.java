@@ -1,55 +1,59 @@
 package com.runinto.config; // 실제 프로젝트의 설정 패키지 경로로 수정해주세요.
 
+import com.runinto.config.properties.RedisCacheProperties;
+import com.runinto.config.properties.RedisSessionProperties;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 @Configuration
 @EnableRedisHttpSession // Redis를 HTTP 세션 저장소로 사용하도록 활성화합니다.
+@EnableConfigurationProperties({RedisSessionProperties.class, RedisCacheProperties.class})
 public class RedisConfig {
 
-    // application.yml 파일의 spring.session.redis.host 값을 주입받습니다.
-    @Value("${spring.session.redis.host}")
-    private String redisHost;
-
-    // application.yml 파일의 spring.session.redis.port 값을 주입받습니다.
-    @Value("${spring.session.redis.port}")
-    private int redisPort;
-
-    @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        // 주입받은 host와 port를 사용하여 LettuceConnectionFactory를 생성합니다.
-        return new LettuceConnectionFactory(redisHost, redisPort);
+    //세션용 Redis Connection Factory 생성 ---
+    @Primary
+    @Bean(name = "sessionRedisConnectionFactory")
+    public RedisConnectionFactory sessionRedisConnectionFactory(RedisSessionProperties sessionProperties) {
+        return new LettuceConnectionFactory(sessionProperties.getHost(), sessionProperties.getPort());
     }
 
-    // RedisTemplate 빈 설정 (선택 사항):
-    // Spring Session 자체는 RedisConnectionFactory만 있으면 동작합니다.
-    // 이 RedisTemplate은 애플리케이션에서 세션 관리 외의 다른 목적으로 Redis에 직접 접근할 때 필요합니다.
-    // 필요 없다면 이 빈 정의는 생략해도 됩니다.
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    //캐시용 Redis Connection Factory 생성 ---
+    @Bean(name = "cacheRedisConnectionFactory")
+    public RedisConnectionFactory cacheRedisConnectionFactory(RedisCacheProperties cacheProperties) {
+        return new LettuceConnectionFactory(cacheProperties.getHost(), cacheProperties.getPort());
+    }
+
+    // --- 3. 세션용 RedisTemplate 생성 ---
+    @Bean(name = "sessionRedisTemplate")
+    // 주입받고 싶은 빈의 이름을 @Qualifier로 명확하게 지정합니다.
+    public RedisTemplate<String, Object> sessionRedisTemplate(
+            @Qualifier("sessionRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(redisConnectionFactory); // 위에서 생성한 RedisConnectionFactory 사용
-
-        // Key 직렬화 방식: String
+        template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return template;
+    }
 
-        // Value 직렬화 방식: String (또는 다른 직렬화 방식 선택 가능, 예: GenericJackson2JsonRedisSerializer)
-        // Spring Session이 세션 데이터를 저장할 때는 자체적인 직렬화 방식을 사용하므로,
-        // 이 RedisTemplate의 Value 직렬화 방식은 세션 저장에 직접적인 영향을 주지 않을 수 있습니다.
-        // 하지만 일반적인 데이터 저장 시 일관성을 위해 설정합니다.
-        template.setValueSerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new StringRedisSerializer());
-        // template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        // template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-        template.afterPropertiesSet();
+    // --- 4. 캐시용 RedisTemplate 생성 ---
+    @Bean(name = "cacheRedisTemplate")
+    // 마찬가지로 @Qualifier를 사용하여 "cacheRedisConnectionFactory"를 명시적으로 주입받습니다.
+    public RedisTemplate<String, Object> cacheRedisTemplate(
+            @Qualifier("cacheRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         return template;
     }
 }
