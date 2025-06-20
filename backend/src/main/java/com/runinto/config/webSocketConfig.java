@@ -1,6 +1,5 @@
 package com.runinto.config;
 
-import com.runinto.chat.presntation.CustomWebSocketHandler;
 import com.runinto.chat.service.CustomWebSocketHandler;
 import com.runinto.util.UserHandshakeInterceptor;
 import org.springframework.context.annotation.Configuration;
