@@ -236,7 +236,7 @@ class EventControllerIntegrationTest {
             fullEvent = eventService.findById(fullEvent.getId());
 
             // 참여 승인
-            eventService.approveParticipant(fullEvent.getId(), regularUser1.getUserId());
+            eventService.approveParticipant(fullEvent.getId(), regularUser1.getUserId(),regularUser1.getUserId());
 
             // 데이터베이스에서 최신 상태의 이벤트를 다시 로드
             fullEvent = eventService.findById(fullEvent.getId());

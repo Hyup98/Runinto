@@ -9,6 +9,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ProfileResponse {
+    private final Long id;
     private final String name;
     private final String imgUrl;
     private final String description;
@@ -17,6 +18,6 @@ public class ProfileResponse {
     private final Integer age;
 
     public static ProfileResponse from(final User user) {
-        return new ProfileResponse(user.getName(), user.getImgUrl(), user.getDescription(), user.getGender(), user.getEmail(), user.getAge());
+        return new ProfileResponse(user.getUserId(), user.getName(), user.getImgUrl(), user.getDescription(), user.getGender(), user.getEmail(), user.getAge());
     }
 };

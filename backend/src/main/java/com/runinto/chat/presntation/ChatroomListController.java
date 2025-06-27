@@ -15,9 +15,9 @@ import java.util.List;
 public class ChatroomListController {
     private final ChatService chatService;
 
-    @GetMapping
+    /*@GetMapping
     public ResponseEntity<List<ChatroomResponse>> getAllChatrooms() {
         List<ChatroomResponse> chatrooms = chatService.getAllChatrooms();
         return ResponseEntity.ok(chatrooms);
-    }
+    }*/
 }

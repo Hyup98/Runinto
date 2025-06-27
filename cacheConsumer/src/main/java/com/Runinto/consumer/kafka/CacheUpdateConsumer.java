@@ -16,7 +16,8 @@ public class CacheUpdateConsumer {
     @Qualifier("cacheRedisTemplate")
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @KafkaListener(topics = "cache-management-topic", groupId = "cache-management-group")
+    // 💡 위에서 만든 설정(ContainerFactory)을 사용하도록 지정
+    @KafkaListener(topics = "cache-management-topic", containerFactory = "cacheUpdateListenerContainerFactory")
     public void consume(CacheUpdateMessage message) {
         log.info("Consumed message for cache update: gridId={}, action={}", message.getGridId(), message.getAction());
 

@@ -1,20 +1,18 @@
 package com.runinto.user.presentaion;
 
+import com.runinto.event.domain.Event;
+import com.runinto.event.dto.response.EventResponse;
+import com.runinto.event.service.EventService;
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
-import com.runinto.user.dto.request.LoginRequest;
-import com.runinto.user.dto.request.RegisterRequest;
 import com.runinto.user.dto.request.UpdateProfileRequest;
-import com.runinto.user.dto.response.EventResponse;
 import com.runinto.user.dto.response.ProfileResponse;
-import com.runinto.user.dto.response.UserDetailResponse;
 import com.runinto.user.service.UserService;
 import com.runinto.util.ImageStorageService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -33,10 +32,12 @@ public class UserController {
 
     private final UserService userService;
     private final ImageStorageService imageStorageService;
+    private final EventService eventService;
 
-    public UserController(UserService userService, ImageStorageService imageStorageService) {
+    public UserController(UserService userService, ImageStorageService imageStorageService, EventService eventService) {
         this.userService = userService;
         this.imageStorageService = imageStorageService;
+        this.eventService = eventService;
     }
 
     @PostConstruct
@@ -91,5 +92,19 @@ public class UserController {
     public ResponseEntity<List<EventResponse>> getJoinedEvents(@PathVariable Long userId) {
         List<EventResponse> events = userService.getJoinedEvents(userId);
         return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/{userId}/created-events")
+    public ResponseEntity<List<EventResponse>> getCreatedEvents(@PathVariable Long userId) {
+        // 1. 새로 만든 서비스 메소드를 호출하여 DB에서 필요한 이벤트만 효율적으로 가져옵니다.
+        List<Event> createdEvents = eventService.findCreatedByUserId(userId);
+
+        // 2. 조회된 엔티티 목록을 클라이언트로 보낼 DTO 목록으로 변환합니다.
+        List<EventResponse> createdEventResponses = createdEvents.stream()
+                .map(EventResponse::from)
+                .collect(Collectors.toList());
+
+        // 3. 변환된 DTO 목록을 응답합니다.
+        return ResponseEntity.ok(createdEventResponses);
     }
 }

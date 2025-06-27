@@ -1,9 +1,11 @@
 package com.runinto.auth.presentaion;
 
 import com.runinto.auth.domain.SessionConst;
+import com.runinto.auth.domain.UserSessionDto;
 import com.runinto.auth.dto.request.LoginRequest;
 import com.runinto.auth.dto.request.LogoutRequest;
 import com.runinto.auth.dto.request.SignupRequest;
+import com.runinto.auth.dto.response.LoginResponse;
 import com.runinto.auth.service.AuthService;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
@@ -39,13 +41,15 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<String> signin(
+    public ResponseEntity<LoginResponse> signin(
             @RequestBody LoginRequest loginRequest, 
             HttpServletRequest request) {
 
-        authService.login(loginRequest.getEmail(), loginRequest.getPassword(), request);
+        Long userId = authService.login(loginRequest.getEmail(), loginRequest.getPassword(), request).getUserId();
 
-        return ResponseEntity.ok("Login Successful");
+        LoginResponse loginResponse = new LoginResponse(userId);
+
+        return ResponseEntity.ok(loginResponse);
     }
 
     @PostMapping("/logout")
@@ -67,6 +71,30 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ProfileResponse.from(user));
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> profile(HttpSession session) {
+        // 1. 세션에서 UserSessionDto 객체를 가져옵니다.
+        Object sessionAttribute = session.getAttribute(SessionConst.LOGIN_MEMBER);
+
+        if (sessionAttribute == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
+        if (!(sessionAttribute instanceof UserSessionDto)) {
+            // 이 경우는 서버 로직 오류이므로 500 에러가 적절합니다.
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("세션 정보가 올바르지 않습니다.");
+        }
+
+        UserSessionDto userSession = (UserSessionDto) sessionAttribute;
+
+        // 2. DTO에 담긴 정보로 실제 User 엔티티를 조회합니다.
+        //    (주의: 컨트롤러가 아닌 서비스 계층에서 처리하는 것이 더 좋은 설계입니다.)
+        User user = userService.findById(userSession.getUserId());
+
+        // 3. 응답 DTO로 변환하여 반환합니다.
+        return ResponseEntity.ok(ProfileResponse.from(user));
     }
 
     @GetMapping("test")
