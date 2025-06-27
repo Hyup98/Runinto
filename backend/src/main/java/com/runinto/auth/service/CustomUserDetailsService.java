@@ -3,7 +3,7 @@ package com.runinto.auth.service;
 import com.runinto.auth.domain.CustomUserDetails;
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.User;
-import com.runinto.user.domain.repository.UserRepositoryImple;
+import com.runinto.user.domain.repository.UserH2Repository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepositoryImple userRepository;
+    private final UserH2Repository userRepository;
 
-    public CustomUserDetailsService(UserRepositoryImple userRepository) {
+    public CustomUserDetailsService(UserH2Repository userRepository) {
 
         this.userRepository = userRepository;
     }

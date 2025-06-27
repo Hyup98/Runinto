@@ -5,6 +5,8 @@ import com.runinto.event.domain.EventType;
 import com.runinto.event.dto.request.FindEventRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
@@ -37,6 +39,11 @@ public class EventRepository {
 
     public List<Event> findByCategory(Set<EventType> categories) {
         return eventJpaRepository.findByCategories(categories);
+    }
+
+    public List<Event> findByHostUserId(Long userId) {
+        // 👇 JpaRepository에 정의한 메소드를 호출하도록 수정합니다.
+        return eventJpaRepository.findByHostUserId(userId);
     }
 
     public List<Event> findByArea(double nelatitude, double nelongitude, double swlatitude, double swlongitude) {
@@ -91,4 +98,29 @@ public class EventRepository {
     public List<Event> findByGridIdIn(List<String> gridIds) {
         return eventJpaRepository.findByGridIdIn(gridIds);
     }
+
+    public List<Event> findWithCategoriesById(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return eventJpaRepository.findWithCategoriesByIdIn(ids);
+    }
+
+    public List<Event> findWithCategoriesByIdIn(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        return eventJpaRepository.findWithCategoriesByIdIn(ids);
+    }
+
+    public Page<Long> findIdsWithPaging(Specification<Event> spec, Pageable pageable) {
+        Page<Event> eventPage = eventJpaRepository.findAll(spec, pageable);
+        // Page<Event>를 Page<Long> (ID 페이징 결과)으로 변환하여 반환
+        return eventPage.map(Event::getId);
+    }
+    public List<Event> findByGridIdInWithCategories(List<String> gridIds) {
+        return eventJpaRepository.findByGridIdInWithCategories(gridIds);
+    }
+
+
 }

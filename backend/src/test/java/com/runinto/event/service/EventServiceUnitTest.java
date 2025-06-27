@@ -227,7 +227,7 @@ class EventServiceUnitTest {
             when(eventRepositoryMock.findById(testEvent1.getId())).thenReturn(Optional.of(testEvent1));
             when(eventRepositoryMock.delete(testEvent1)).thenReturn(true); // EventH2Repository.delete(Event)는 boolean 반환
 
-            boolean result = eventService.delete(testEvent1.getId());
+            boolean result = eventService.deleteEvent(testEvent1.getId(), );
 
             assertThat(result).isTrue();
             verify(eventRepositoryMock).findById(testEvent1.getId());
@@ -240,7 +240,7 @@ class EventServiceUnitTest {
             long nonExistentId = 99L;
             when(eventRepositoryMock.findById(nonExistentId)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> eventService.delete(nonExistentId))
+            assertThatThrownBy(() -> eventService.deleteEvent(nonExistentId, ))
                     .isInstanceOf(EventNotFoundException.class)
                     .hasMessageContaining("Event not found"); // EventService.delete의 예외 메시지
             verify(eventRepositoryMock).findById(nonExistentId);
@@ -278,7 +278,7 @@ class EventServiceUnitTest {
         @Test
         @DisplayName("요청 상태의 참여자를 승인하면, 상태가 APPROVED로 변경되고 채팅방에 해당 사용자가 추가된다")
         void whenParticipantIsRequested_approvesAndAddsUserToChatroom() {
-            eventService.approveParticipant(testEvent1.getId(), testUser1.getUserId());
+            eventService.approveParticipant(testEvent1.getId(), testUser1.getUserId(), testUser1.getUserId());
 
             assertThat(requestedParticipant.getStatus()).isEqualTo(ParticipationStatus.APPROVED);
 
@@ -298,7 +298,7 @@ class EventServiceUnitTest {
         @DisplayName("이벤트에 채팅방이 없으면 IllegalStateException을 던진다 ('No chatroom found for event')")
         void whenEventHasNoChatroom_throwsIllegalStateException() {
             testEvent1.setChatroom(null); // 채팅방 제거
-            assertThatThrownBy(() -> eventService.approveParticipant(testEvent1.getId(), testUser1.getUserId()))
+            assertThatThrownBy(() -> eventService.approveParticipant(testEvent1.getId(), testUser1.getUserId(), testUser1.getUserId()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("No chatroom found for event " + testEvent1.getId());
         }
@@ -307,7 +307,7 @@ class EventServiceUnitTest {
         @DisplayName("참여자가 REQUESTED 상태가 아니면 IllegalStateException을 던진다 ('Only REQUESTED participants can be approved')")
         void whenParticipantNotRequested_throwsIllegalStateException() {
             requestedParticipant.setStatus(ParticipationStatus.APPROVED); // 이미 승인된 상태로 변경
-            assertThatThrownBy(() -> eventService.approveParticipant(testEvent1.getId(), testUser1.getUserId()))
+            assertThatThrownBy(() -> eventService.approveParticipant(testEvent1.getId(), testUser1.getUserId(), testUser1.getUserId()))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Participant is already approved.");
         }

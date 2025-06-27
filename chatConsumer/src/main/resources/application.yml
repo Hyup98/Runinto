@@ -1,0 +1,16 @@
+spring:
+  main:
+    web-application-type: none # 웹 서버 기능 제외
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: chat-message-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.runinto.common.dto" # common DTO 신뢰
+  data:
+    redis:
+      host: localhost
+      port: 6380

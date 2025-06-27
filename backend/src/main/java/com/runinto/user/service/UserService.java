@@ -1,22 +1,20 @@
 package com.runinto.user.service;
 
-import com.runinto.event.domain.Event;
+import com.runinto.event.domain.EventParticipant;
+import com.runinto.event.dto.response.EventResponse;
 import com.runinto.exception.user.*;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository;
-import com.runinto.user.domain.repository.UserRepositoryImple;
 import com.runinto.user.dto.request.RegisterRequest;
-import com.runinto.user.dto.response.EventResponse;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class UserService {
 
-    private final UserRepositoryImple userH2Repository;
+    private final UserH2Repository userH2Repository;
 
     public UserService(final UserH2Repository userH2Repository) {
         this.userH2Repository = userH2Repository;
@@ -35,10 +33,8 @@ public class UserService {
         if (!userH2Repository.existsByUserId(userId)) {
             throw new UserIdNotFoundException("User id not found: " + userId + " .");
         }
-        List<Event> joinedEvents = userH2Repository.findJoinedEvents(userId);
-        return joinedEvents.stream()
-                .map(EventResponse::from)
-                .toList();
+        List<EventParticipant> participats = userH2Repository.findParticipationsByUserId(userId);
+        return EventResponse.from(participats);
     }
 
     public User registerUser(final User user) {

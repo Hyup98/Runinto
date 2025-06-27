@@ -1,12 +1,12 @@
 package com.runinto.user.service;
 
 import com.runinto.event.domain.Event; // Assuming Event domain class exists for EventResponse
+import com.runinto.event.dto.response.EventResponse;
 import com.runinto.exception.user.*;
 import com.runinto.user.domain.Gender;
 import com.runinto.user.domain.Role;
 import com.runinto.user.domain.User;
 import com.runinto.user.domain.repository.UserH2Repository; // Using the type mocked in the original test
-import com.runinto.user.dto.response.EventResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

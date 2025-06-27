@@ -10,17 +10,14 @@ import com.runinto.chat.domain.repository.message.ChatMessageRepositoryImple;
 import com.runinto.chat.dto.response.ChatroomResponse;
 import com.runinto.event.domain.Event;
 import com.runinto.event.domain.repository.EventRepository;
-import com.runinto.event.domain.repository.EventRepositoryImple;
 import com.runinto.user.domain.User;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Service for managing chat functionality including chatrooms, messages, and participants

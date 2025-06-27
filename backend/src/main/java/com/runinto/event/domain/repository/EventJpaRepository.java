@@ -24,5 +24,15 @@ public interface EventJpaRepository extends JpaRepository<Event, Long> , JpaSpec
             @Param("swlat") double swlat,
             @Param("swlng") double swlng);
 
+
+    @Query("SELECT DISTINCT e FROM Event e JOIN FETCH e.eventCategories ec WHERE e.gridId IN :gridIds") // 수정 후
+    List<Event> findByGridIdInWithCategories(@Param("gridIds") List<String> gridIds);
+
+    @Query("SELECT DISTINCT e FROM Event e JOIN FETCH e.eventCategories WHERE e.id IN :ids")
+    List<Event> findWithCategoriesByIdIn(@Param("ids") List<Long> ids);
+
+
     List<Event> findByGridIdIn(List<String> gridIds);
+    List<Event> findByHostUserId(Long userId);
+
 }

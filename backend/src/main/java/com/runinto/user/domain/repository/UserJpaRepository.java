@@ -7,18 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import com.runinto.event.domain.EventParticipant;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserJpaRepository extends JpaRepository<User, Long> {
+
     @Query("""
-        SELECT e.event 
-        FROM EventParticipant e 
-        WHERE e.user.userId = :userId
+        SELECT ep
+        FROM EventParticipant ep
+        WHERE ep.user.userId = :userId
     """)
-    List<Event> findJoinedEvents(@Param("userId") Long userId);
+    List<EventParticipant> findParticipationsByUserId(@Param("userId") Long userId);
+
 
     Optional<User> findByEmail(String email);
 
@@ -27,13 +30,6 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     boolean existsByUserId(Long userId);
-
-    /*@EntityGraph(attributePaths = {
-            "eventParticipants.event",
-            "chatParticipations.chatroom"
-    })
-    @Query("SELECT u FROM User u WHERE u.userId = :id")
-    Optional<User> findWithAssociationsById(@Param("id") Long id);*/
 
     @EntityGraph(attributePaths = {
             "eventParticipants.event",
